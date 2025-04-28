@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Search Page</title>
+</head>
+<body>
+  <h1>Class Search</h1>
+
+  <form>
+    <div class="search-bar">
+      <input type="text" name="query" placeholder="Search..." style="flex: 1;">
+      <button type="submit">Search</button>
+    </div>
+
+    <fieldset class="filters">
+      <legend>Class Level</legend>
+
+      <div class="filter-group">
+        <label><input type="checkbox" name="undergrad">Undergraduate</label>
+      </div>
+      <div class="filter-group">
+        <label><input type="checkbox" name="grad">Graduate</label>
+      </div>
+    </fieldset>
+<fieldset class="filters">
+      <legend>Academic Year</legend>
+	<div class="filter-group">
+    <label for="year-select">Select Year:</label>
+    <select name="year" id="year-select">
+      <option value="">-- Any Year --</option>
+      <option value="2025">2025</option>
+      <option value="2024">2024</option>
+      <option value="2023">2023</option>
+      <option value="2022">2022</option>
+    </select>
+  </div>
+  <fieldset class="filters">
+      <legend>Semester</legend>
+
+      <div class="filter-group">
+        <label><input type="radio" name="filter" value="fall">Fall</label>
+      </div>
+      <div class="filter-group">
+        <label><input type="radio" name="filter" value="spring">Spring</label>
+      </div>
+    </fieldset>
+
+</fieldset>
+<fieldset class="filters">
+      <legend>Delivery Format</legend>
+
+      <div class="filter-group">
+        <label><input type="checkbox" name="in-person">In-Person</label>
+      </div>
+      <div class="filter-group">
+        <label><input type="checkbox" name="online">Online</label>
+      </div>
+<div class="filter-group">
+        <label><input type="checkbox" name="hybrid">Hybrid</label>
+      </div>
+    </fieldset>
+  </form>
+
+</body>
+</html>
