@@ -80,6 +80,6 @@ export async function logIn(emailAddr, password) {
       throw new Error("invalid email or password")
     }
 
-    return user
+    return user //just return the user to pass its info to the profile page
 
 }
