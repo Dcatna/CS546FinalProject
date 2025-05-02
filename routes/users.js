@@ -13,6 +13,23 @@ router.route("/register").get(async (req, res) => {
         return res.redirect("/profile")
     }
     res.render("signup.html")
+}).post(async (req, res) => {
+    const {userId, firstName, lastName, emailAddr, password} = req.body
+
+    try {
+        const result = await register(userId, firstName, lastName, emailAddr, password)
+        if (result.registrationCompleted) {
+            return res.redirect("/signin")
+        } else {
+            return res.status(500).render("signup.html", {
+                errors: "internal server error"
+            })
+        }
+    } catch (e) {
+        return res.status(400).render("signup.html", {
+            errors: e.message
+        })
+    }
 })
 
 router.route("/login").get(async (req, res) => {

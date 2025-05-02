@@ -57,7 +57,7 @@ export async function register(userId, firstName, lastName, emailAddr, password)
         throw new Error("registration failed")
     }
 
-    return user //maybe just return the user to login them in right away or just pass completed and do the same?
+    return {registrationCompleted: true} //maybe just return the user to login them in right away or just pass completed and do the same?
 
 }
 
