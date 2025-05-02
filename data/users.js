@@ -1,0 +1,85 @@
+import { type } from "os";
+import { dbConnection } from "../config/mongoConnection";
+import bcrypt from 'bcrypt';
+
+
+export async function register(userId, firstName, lastName, emailAddr, password) { //returns the valid user object
+    //basic checks
+    if(!userId || typeof userId !== "string" ) { //prolly jsut gonna check objectid too 
+        throw new Error("invalid userId")
+    }
+    if(!firstName || typeof firstName !== "string" || !lastName || typeof lastName !== "string") {
+        throw new Error("invalid first or last name")
+    }
+    if(!emailAddr || typeof emailAddr !== "string" || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailAddr)) {
+        throw new Error("invalid email address")
+    }
+    if(!password || typeof password !== "string" || !/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)) {
+        throw new Error("invalid password")
+    }
+
+    //register logic
+
+    const db = await dbConnection();
+    const userCollection = db.collection("users")
+    const duplicate = await userCollection.findOne({ userId: userId});
+    if(duplicate) {
+      throw new Error("duplicate userid")
+    }
+    const dupliacteEmail = await userCollection.findOne({emailAddr: emailAddr})
+    if(dupliacteEmail) {
+        throw new Error("duplicate email address")
+    }
+
+    const day = new Date()
+    const yyyy = day.getFullYear()
+    let mm = day.getMonth() + 1
+    let dd = day.getDate()
+  
+    if (dd < 10) dd = '0' + dd
+    if (mm < 10) mm = '0' + mm
+  
+    const currDay = mm + '/' + dd + '/' + yyyy
+    const hashedPass = await bcrypt.hash(password, 10)
+
+    const user = {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        userId: userId,
+        password: hashedPass,
+        emailAddr: emailAddr,
+        createdAt: currDay,
+        schedules: []
+    }
+
+    const insertRes = await userCollection.insertOne(user)
+    if(!insertRes.acknowledged) {
+        throw new Error("registration failed")
+    }
+
+    return user //maybe just return the user to login them in right away or just pass completed and do the same?
+
+}
+
+export async function logIn(emailAddr, password) {
+    if(!emailAddr || typeof emailAddr !== "string") {
+        throw new Error("invalid email address")
+    }
+    if (!password || typeof password !== "string") {
+        throw new Error("invalid password")
+    }
+
+    const db = await dbConnection();
+    const userCollection = db.collection("users")
+    const user = await userCollection.findOne({ emailAddr: emailAddr })
+    if(!user) {
+        throw new Error("invalid email or password")
+    }
+    const passMatch = await bcrypt.compare(password, user.password)
+    if (!passMatch) {
+      throw new Error("invalid email or password")
+    }
+
+    return user
+
+}
