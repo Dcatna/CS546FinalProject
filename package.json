@@ -1,0 +1,23 @@
+{
+  "name": "cs546finalproject",
+  "version": "1.0.0",
+  "description": "",
+  "type": "commonjs",
+  "homepage": "https://github.com/Dcatna/CS546FinalProject#readme",
+  "bugs": {
+    "url": "https://github.com/Dcatna/CS546FinalProject/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dcatna/CS546FinalProject.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+  }
+}
