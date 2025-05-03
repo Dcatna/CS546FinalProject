@@ -1,5 +1,5 @@
 import { type } from "os";
-import { dbConnection } from "../config/mongoConnection";
+import { dbConnection } from "../config/mongoConnection.js";
 import bcrypt from 'bcrypt';
 
 

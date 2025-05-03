@@ -1,18 +1,19 @@
 import { Router } from "express";
-import { register, logIn } from "../data/users";
+import { register, logIn } from "../data/users.js";
+
 const router = Router()
 
 router.route("/").get(async (req, res) => {
     // const user = req.session.user
 
-    res.render("register.html") //idk
+    res.render("signin") //idk
 })
 
 router.route("/register").get(async (req, res) => {
     if (req.session.user) {
         return res.redirect("/profile")
     }
-    res.render("signup.html")
+    res.render("signup")
 }).post(async (req, res) => {
     const {userId, firstName, lastName, emailAddr, password} = req.body
 
@@ -21,12 +22,12 @@ router.route("/register").get(async (req, res) => {
         if (result.registrationCompleted) {
             return res.redirect("/signin")
         } else {
-            return res.status(500).render("signup.html", {
+            return res.status(500).render("signup", {
                 errors: "internal server error"
             })
         }
     } catch (e) {
-        return res.status(400).render("signup.html", {
+        return res.status(400).render("signup", {
             errors: e.message
         })
     }
@@ -36,7 +37,7 @@ router.route("/login").get(async (req, res) => {
     if(req.session.user) {
         return res.redirect("/profile")
     }
-    res.render("signin.html")
+    res.render("signin")
 }).post(async (req, res) => {
     const {email, password} = req.body
     //ill just do error checks in the form validation
@@ -52,7 +53,7 @@ router.route("/login").get(async (req, res) => {
         }
         return res.redirect("/profile")
     } catch (e) {
-        return res.status(400).render("login.html", {
+        return res.status(400).render("login", {
             error: e.message
         })
     }
@@ -61,10 +62,10 @@ router.route("/login").get(async (req, res) => {
 
 router.route("/profile").get(async (req, res) => {
     if(!req.session.user) {
-        return res.redirect("signin.html")
+        return res.redirect("signin")
     }
     const user = req.session.user
-    res.render("profile.html", {
+    res.render("profile", {
         firstName: user.firstName,
         lastName: user.lastName,
         userId: user.userId,
@@ -72,3 +73,5 @@ router.route("/profile").get(async (req, res) => {
         schedules: user.schedules
     })
 })
+
+export default router
