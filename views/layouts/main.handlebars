@@ -10,7 +10,19 @@
     <link rel="stylesheet" href="../../public/css/styles.css">
 </head>
 <body style="background-color: {{themePreference.backgroundColor}}; color: {{themePreference.fontColor}}">
+    <div class="sidebar">
+        {{#if (isLoggedIn session)}}
+        <a href="/search">Course Search</a>
+        <a href="/schedules">My Schedules</a>
+        <a href="/profile">Profile</a>
+        {{else}}
+        <a href="/register">Register</a>
+        <a href="/login">Login</a>
+        {{/if}}
+    </div>
+    <main>
     {{{body}}}
+    </main>
     <script src="/public/js/form_validate.js"></script>
 </body>
 <footer>
