@@ -10,17 +10,18 @@ router.route("/").get(async (req, res) => {
 })
 
 router.route("/register").get(async (req, res) => {
-    if (req.session.user) {
+    if (req.session && req.session.user) {
         return res.redirect("/profile")
     }
     res.render("signup")
 }).post(async (req, res) => {
-    const {userId, firstName, lastName, emailAddr, password} = req.body
+    const {username, firstName, lastName, email, password} = req.body;
+    
 
     try {
-        const result = await register(userId, firstName, lastName, emailAddr, password)
+        const result = await register(username, firstName, lastName, email, password)
         if (result.registrationCompleted) {
-            return res.redirect("/signin")
+            return res.redirect("/login")
         } else {
             return res.status(500).render("signup", {
                 errors: "internal server error"
@@ -34,7 +35,7 @@ router.route("/register").get(async (req, res) => {
 })
 
 router.route("/login").get(async (req, res) => {
-    if(req.session.user) {
+    if(req.session && req.session.user) {
         return res.redirect("/profile")
     }
     res.render("signin")
@@ -53,7 +54,8 @@ router.route("/login").get(async (req, res) => {
         }
         return res.redirect("/profile")
     } catch (e) {
-        return res.status(400).render("login", {
+        console.log(e);
+        return res.status(400).render("signin", {
             error: e.message
         })
     }
@@ -61,7 +63,7 @@ router.route("/login").get(async (req, res) => {
 })
 
 router.route("/profile").get(async (req, res) => {
-    if(!req.session.user) {
+    if(!req.session || !req.session.user) {
         return res.redirect("signin")
     }
     const user = req.session.user
