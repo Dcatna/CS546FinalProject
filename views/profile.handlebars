@@ -1,10 +1,13 @@
-<h2>Welcome, {{firstName}} {{lastName}}!</h2>
-<p>User ID: {{userId}}</p>
-<p>Joined: {{createdAt}}</p>
 
-<h3>Schedules:</h3>
-<ul>
-    {{#each schedules}}
-        <li>{{this}}</li>
-    {{/each}}
-</ul>
+<div class="profile-container">
+    <h2>Welcome, {{firstName}} {{lastName}}!</h2>
+    <p>User ID: {{userId}}</p>
+    <p>Joined: {{createdAt}}</p>
+
+    <h3>Schedules:</h3>
+    <ul>
+        {{#each schedules}}
+            <li>{{this}}</li>
+        {{/each}}
+    </ul>
+</div>

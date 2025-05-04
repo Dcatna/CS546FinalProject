@@ -6,7 +6,7 @@ const router = Router()
 router.route("/").get(async (req, res) => {
     // const user = req.session.user
 
-    res.render("signin") //idk
+    res.render("signup") //idk
 })
 
 router.route("/register").get(async (req, res) => {
