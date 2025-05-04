@@ -1,28 +1,33 @@
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{title}}</title>
-    <link rel="stylesheet" href="../../public/css/styles.css">
+    <link rel="stylesheet" href="/public/css/styles.css">
 </head>
 <body style="background-color: {{themePreference.backgroundColor}}; color: {{themePreference.fontColor}}">
-    <div class="sidebar">
-        {{#if (isLoggedIn session)}}
-        <a href="/search">Course Search</a>
-        <a href="/schedules">My Schedules</a>
-        <a href="/profile">Profile</a>
-        {{else}}
-        <a href="/register">Register</a>
-        <a href="/login">Login</a>
-        {{/if}}
-    </div>
-    <main>
-    {{{body}}}
+
+  <div class="page-layout">
+    <aside class="sidebar">
+        <h2>Class Scheduler</h2>
+        <ul>
+            {{#if (isLoggedIn session)}}
+                <li><a href="/search">Course Search</a></li>
+                <li><a href="/schedules">My Schedules</a></li>
+                <li><a href="/profile">Profile</a></li>
+            {{else}}
+                <li><a href="/register">Sign Up</a></li>
+                <li><a href="/login">Sign In</a></li>
+            {{/if}}
+        </ul>
+    </aside>
+
+    <main class="main-content">
+      {{{body}}}
     </main>
-    <script src="/public/js/form_validate.js"></script>
+  </div>
+
+  <script src="/public/js/form_validate.js"></script>
 </body>
 </html>
