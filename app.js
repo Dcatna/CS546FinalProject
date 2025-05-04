@@ -2,7 +2,7 @@ import express from 'express'
 import constructorMethod from './routes/index.js'
 import exphbs from 'express-handlebars';
 import session from 'express-session';
-
+import Handlebars from 'handlebars'
 
 const app = express()
 
@@ -12,6 +12,10 @@ app.use(express.json())
 app.use(express.urlencoded({extended: true}));
 app.engine('handlebars', exphbs.engine({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
+
+Handlebars.registerHelper("isLoggedIn", function(session){
+  return session && session.user;
+});
 
 app.use(
   session({

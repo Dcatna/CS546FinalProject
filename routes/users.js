@@ -13,7 +13,7 @@ router.route("/register").get(async (req, res) => {
     if (req.session && req.session.user) {
         return res.redirect("/profile")
     }
-    res.render("signup")
+    res.render("signup", {session: req.session})
 }).post(async (req, res) => {
     const {username, firstName, lastName, email, password} = req.body;
     
@@ -24,12 +24,14 @@ router.route("/register").get(async (req, res) => {
             return res.redirect("/login")
         } else {
             return res.status(500).render("signup", {
-                errors: "internal server error"
+                errors: "internal server error",
+                session: req.session
             })
         }
     } catch (e) {
         return res.status(400).render("signup", {
-            errors: e.message
+            errors: e.message,
+            session: req.session
         })
     }
 })
@@ -38,7 +40,7 @@ router.route("/login").get(async (req, res) => {
     if(req.session && req.session.user) {
         return res.redirect("/profile")
     }
-    res.render("signin")
+    res.render("signin", {session: req.session})
 }).post(async (req, res) => {
     const {email, password} = req.body
     //ill just do error checks in the form validation
@@ -56,7 +58,8 @@ router.route("/login").get(async (req, res) => {
     } catch (e) {
         console.log(e);
         return res.status(400).render("signin", {
-            error: e.message
+            error: e.message,
+            session: req.session
         })
     }
 
@@ -64,7 +67,7 @@ router.route("/login").get(async (req, res) => {
 
 router.route("/profile").get(async (req, res) => {
     if(!req.session || !req.session.user) {
-        return res.redirect("signin")
+        return res.redirect("login")
     }
     const user = req.session.user
     res.render("profile", {
@@ -72,7 +75,8 @@ router.route("/profile").get(async (req, res) => {
         lastName: user.lastName,
         userId: user.userId,
         createdAt: user.createdAt,
-        schedules: user.schedules
+        schedules: user.schedules,
+        session: req.session
     })
 })
 
