@@ -1,7 +1,7 @@
 import express from 'express'
 import constructorMethod from './routes/index.js'
 import exphbs from 'express-handlebars';
-
+import session from 'express-session';
 
 
 const app = express()
@@ -13,6 +13,13 @@ app.use(express.urlencoded({extended: true}));
 app.engine('handlebars', exphbs.engine({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
 
+app.use(
+  session({
+    secret: "This is a secret.. shhh don't tell anyone",
+    saveUninitialized: false,
+    resave: false
+  })
+);
 constructorMethod(app)
 
 app.listen(3000, () => {

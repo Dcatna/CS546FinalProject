@@ -45,7 +45,7 @@ router.route("/login").get(async (req, res) => {
 
     try {
         const user = await logIn(email, password)
-        req.sesion.user = {
+        req.session.user = {
             firstName: user.firstName,
             lastName: user.lastName,
             userId: user.userId,
