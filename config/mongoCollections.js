@@ -15,3 +15,5 @@ const getCollectionFn = (collection) => {
 
 
 export const users = getCollectionFn('users');
+export const faculty = getCollectionFn('faculty');
+export const courses = getCollectionFn('courses');
