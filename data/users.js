@@ -20,9 +20,9 @@ export async function register(userId, firstName, lastName, emailAddr, password)
 
     //register logic
 
-    const db = await dbConnection();
+    const db = await dbConnection()
     const userCollection = db.collection("users")
-    const duplicate = await userCollection.findOne({ userId: userId});
+    const duplicate = await userCollection.findOne({ userId: userId})
     if(duplicate) {
       throw new Error("duplicate userid")
     }
@@ -49,7 +49,8 @@ export async function register(userId, firstName, lastName, emailAddr, password)
         password: hashedPass,
         emailAddr: emailAddr,
         createdAt: currDay,
-        schedules: []
+        schedules: [],
+        profileImage: null
     }
 
     const insertRes = await userCollection.insertOne(user)
@@ -69,7 +70,7 @@ export async function logIn(emailAddr, password) {
         throw new Error("invalid password")
     }
 
-    const db = await dbConnection();
+    const db = await dbConnection()
     const userCollection = db.collection("users")
     const user = await userCollection.findOne({ emailAddr: emailAddr })
     if(!user) {
@@ -83,3 +84,45 @@ export async function logIn(emailAddr, password) {
     return user //just return the user to pass its info to the profile page
 
 }
+
+export async function getProfilePicture(userId) {
+    const db = await dbConnection()
+    const userCollection = db.collection("users")
+    const user = await userCollection.findOne({ userId: userId})
+
+    if (!user) {
+        throw new Error("invalid user ID")
+    }
+
+    if (!user.profileImage) { //if no image just return null
+        return null
+    }
+    return { //else we will return the object of the image and its type
+        data: user.profileImage.data.buffer,
+        contentType: user.profileImage.contentType
+    }
+
+}
+
+export async function setProfilePicture(userId, buffer, contentType) {
+    const db = await dbConnection()
+    const userCollection = db.collection("users")
+  
+    const result = await userCollection.updateOne(
+      { userId: userId },
+      {
+        $set: {
+          profileImage: {
+            data: buffer,
+            contentType: contentType
+          }
+        }
+      }
+    )
+  
+    if (result.modifiedCount === 0) {
+      throw new Error("failed to update profile picture")
+    }
+  
+    return true
+  }

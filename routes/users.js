@@ -1,6 +1,10 @@
 import { Router } from "express";
-import { register, logIn } from "../data/users.js";
+import { register, logIn, getProfilePicture, setProfilePicture } from "../data/users.js";
+import multer from 'multer';
 
+
+const storage = multer.memoryStorage()
+const upload = multer({ storage })
 const router = Router()
 
 router.route("/").get(async (req, res) => {
@@ -78,6 +82,21 @@ router.route("/profile").get(async (req, res) => {
         schedules: user.schedules,
         session: req.session
     })
+})
+
+router.route("/profile/image/:userId").get(async (req, res) => {
+    console.log("HI")
+    try {
+        const image = await getProfilePicture(req.params.userId)
+        if (image === null) {
+            return res.send(null)
+        }
+        res.set("Content-Type", image.contentType)
+        res.send(image.data)
+
+    } catch (e) {
+        res.status(404).send("image not found")
+    }
 })
 
 export default router

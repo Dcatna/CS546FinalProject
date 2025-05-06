@@ -1,13 +1,31 @@
-
 <div class="profile-container">
-    <h2>Welcome, {{firstName}} {{lastName}}!</h2>
-    <p>User ID: {{userId}}</p>
-    <p>Joined: {{createdAt}}</p>
+  <div class="profile-header">
+    <div class="profile-picture-section">
+      <img
+        src="/profile/image/{{userId}}"
+        alt="Profile Picture"
+        class="profile-picture"
+        onerror="this.onerror=null; this.src='/public/user_default.jpg';"
+      />
+    </div>
+    <div class="profile-info">
+      <h2>Welcome, {{firstName}} {{lastName}}!</h2>
+      <p><strong>User ID:</strong> {{userId}}</p>
+      <p><strong>Joined:</strong> {{createdAt}}</p>
+    </div>
+  </div>
 
+  <div class="profile-tabs">
+    <button class="active">Schedules</button>
+    <button>Comments</button>
+  </div>
+
+  <div class="profile-content">
     <h3>Schedules:</h3>
     <ul>
-        {{#each schedules}}
-            <li>{{this}}</li>
-        {{/each}}
+      {{#each schedules}}
+        <li>{{this}}</li>
+      {{/each}}
     </ul>
+  </div>
 </div>
