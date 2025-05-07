@@ -125,4 +125,4 @@ export async function setProfilePicture(userId, buffer, contentType) {
     }
   
     return true
-  }
+}

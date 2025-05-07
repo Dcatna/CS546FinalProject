@@ -1,15 +1,24 @@
 <div class="profile-container">
   <div class="profile-header">
-    <div class="profile-picture-section">
-      <img
+    <form id="profileImageForm" action="/profile/upload" method="POST" enctype="multipart/form-data">
+    <div class="profile-picture-section" id="profilePictureClickable">
+        <img
         src="/profile/image/{{userId}}"
         alt="Profile Picture"
         class="profile-picture"
         onerror="this.onerror=null; this.src='/public/user_default.jpg';"
-      />
+        />
+        <input
+        type="file"
+        id="profileImageInput"
+        name="profileImage"
+        accept="image/*"
+        style="display: none;"
+        />
     </div>
+    </form>
     <div class="profile-info">
-      <h2>Welcome, {{firstName}} {{lastName}}!</h2>
+      <h2><strong>Name:</strong> {{firstName}} {{lastName}}</h2>
       <p><strong>User ID:</strong> {{userId}}</p>
       <p><strong>Joined:</strong> {{createdAt}}</p>
     </div>

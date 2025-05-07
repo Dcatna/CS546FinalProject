@@ -89,13 +89,29 @@ router.route("/profile/image/:userId").get(async (req, res) => {
     try {
         const image = await getProfilePicture(req.params.userId)
         if (image === null) {
-            return res.send(null)
+            return res.send(null) //send null so it knows to use the default
         }
         res.set("Content-Type", image.contentType)
         res.send(image.data)
 
     } catch (e) {
         res.status(404).send("image not found")
+    }
+})
+
+router.post("/profile/upload", upload.single("profileImage"), async (req, res) => {
+    try {
+        const userId = req.session.user.userId
+        const file = req.file
+
+        if (!file) {
+            return res.status(400).send("no files")
+        }
+
+        await setProfilePicture(userId, file.buffer, file.mimetype)
+        res.redirect("/profile") //trigger refresh
+    } catch (e) {
+        res.status(500).send("upload failed: " + e)
     }
 })
 
