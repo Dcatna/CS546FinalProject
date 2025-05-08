@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { register, logIn, getProfilePicture, setProfilePicture } from "../data/users.js";
+import { getCourseById } from "../data/courses.js";
 import multer from 'multer';
-
 
 const storage = multer.memoryStorage()
 const upload = multer({ storage })
@@ -85,7 +85,6 @@ router.route("/profile").get(async (req, res) => {
 })
 
 router.route("/profile/image/:userId").get(async (req, res) => {
-    console.log("HI")
     try {
         const image = await getProfilePicture(req.params.userId)
         if (image === null) {
@@ -115,4 +114,18 @@ router.post("/profile/upload", upload.single("profileImage"), async (req, res) =
     }
 })
 
+router.route("/schedules").get(async (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("login")
+    }
+    const schedules = await Promise.all(req.session.user.schedules.map(async schedule => ({
+        name: schedule.name,
+        courses: await Promise.all(schedule.courses.map(async courseId => await getCourseById(courseId)))
+    })));
+    console.log(schedules);
+    res.render("schedules", {
+        session: req.session,
+        schedules: schedules
+    });
+})
 export default router
