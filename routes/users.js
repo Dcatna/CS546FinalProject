@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { register, logIn, getProfilePicture, setProfilePicture } from "../data/users.js";
-import { getCourseById } from "../data/courses.js";
+import { unpackSchedules, getSectionTimes } from "../data/courses.js";
 import multer from 'multer';
 
 const storage = multer.memoryStorage()
@@ -118,10 +118,13 @@ router.route("/schedules").get(async (req, res) => {
     if(!req.session || !req.session.user) {
         return res.redirect("login")
     }
-    const schedules = await Promise.all(req.session.user.schedules.map(async schedule => ({
+
+    let schedules = await unpackSchedules(req.session.user.schedules);
+    schedules = schedules.map(schedule => ({
         name: schedule.name,
-        courses: await Promise.all(schedule.courses.map(async courseId => await getCourseById(courseId)))
-    })));
+        sections: getSectionTimes(schedule)
+    }));
+    
     console.log(schedules);
     res.render("schedules", {
         session: req.session,

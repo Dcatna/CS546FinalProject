@@ -40,3 +40,53 @@ export const searchByProfessor = async (name) => {
         console.error('Error during search:', err);
       }
 }
+
+const parseTimeRange = (rangeStr) => {
+  const [startStr, endStr] = rangeStr.split(" - ").map(s => s.trim());
+
+  const toDecimal = (timeStr) => {
+    const [time, period] = timeStr.split(" ");
+    let [hours, minutes] = time.split(":").map(Number);
+    if (period === "PM" && hours !== 12) hours += 12;
+    if (period === "AM" && hours === 12) hours = 0;
+    return hours + minutes / 60;
+  };
+
+  const startTime = toDecimal(startStr);
+  const endTime = toDecimal(endStr);
+  const duration = endTime - startTime;
+
+  return { startTime, duration };
+}
+
+//schedules are stored in DB as arrays of course ObjectIds, so here we load all of the courses from the database for each of the user's schedules
+export const unpackSchedules = async (schedules) => {
+  const out = []
+  for (const schedule of schedules){
+    out.push({
+      name: schedule.name,
+      courses: await Promise.all(schedule.courses.map(async courseId => await getCourseById(courseId)))
+    })
+    
+  }
+  return out;
+}
+
+//given a schedule, return an array of 'sections'; i.e. a class that meets 3 times a week has 3 sections, which each need to be rendered on the schedule.
+//each section has the course name, a start time (1:30pm = 13.5 e.g), and a duration in hours.
+export const getSectionTimes = (schedule) => {
+  const sections = [];
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  for (const course of schedule.courses){
+    const { startTime, duration } = parseTimeRange(course.time);
+    for (const day of course.days.split("/")){
+      sections.push({
+        name: course.course,
+        startTime: startTime,
+        duration: duration,
+        day: daysOfWeek.indexOf(day)
+      })
+    }
+  }
+  return sections;
+}

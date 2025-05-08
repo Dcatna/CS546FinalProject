@@ -57,12 +57,18 @@
 
   <div class="cell time-label">10:00pm</div>
   <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
-</div>
-{{#each courses}}
-  <p>{{course}}</p>
-<!--draw rectangle objects for each course here-->
-{{/each}}
 
+{{#each sections}}
+  <div class="class-block" style="
+    left: calc(100px + {{day}} * ((100% - 100px) / 5)); /* skip time column; monday=0, etc */
+    top: calc(({{startTime}} - 7) * (100% / 16));  /* skip header row */
+    width: calc((100% - 100px) / 5);
+    height: calc({{duration}} * (100% / 16)); /* 2 time slots */
+  ">
+    {{name}}
+  </div>
+{{/each}}
+</div>
 {{/each}}
 
 {{#unless schedules}}
