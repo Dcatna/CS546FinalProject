@@ -78,7 +78,8 @@ export const getSectionTimes = (schedule) => {
   const sections = [];
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   for (const course of schedule.courses){
-    const { startTime, duration } = parseTimeRange(course.time);
+    try {
+      const { startTime, duration } = parseTimeRange(course.time);
     for (const day of course.days.split("/")){
       sections.push({
         name: course.course,
@@ -86,6 +87,10 @@ export const getSectionTimes = (schedule) => {
         duration: duration,
         day: daysOfWeek.indexOf(day)
       })
+    }
+    }
+    catch(e){
+      continue;
     }
   }
   return sections;
