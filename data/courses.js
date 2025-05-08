@@ -13,3 +13,30 @@ export const getCourseById = async (id) => {
     if (!course) throw `lookupCourse: Course not found`;
     return course;
 }
+
+export const searchByClass = async (name) => {
+    if(!name || typeof name !== 'string') throw "Invalid name";
+    const classColl = await courses();
+    try {
+        const courses = await classColl.find({
+          $or: [
+            {"Course Section": { $regex: name, $options: 'i'}},
+            {"Course": { $regex: name, $options: 'i'}}
+          ]
+        }).limit(20);
+        return courses;
+      } catch (err) {
+        console.error('Error during search:', err);
+      }
+}
+
+export const searchByProfessor = async (name) => {
+    if(!name || typeof name !== 'string') throw "Invalid name";
+    const classColl = await courses();
+    try {
+        const courses = await classColl.find({"Instructor": { $regex: name, $options: 'i' }}).limit(20);
+        return courses;
+      } catch (err) {
+        console.error('Error during search:', err);
+      }
+}
