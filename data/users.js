@@ -126,3 +126,19 @@ export async function setProfilePicture(userId, buffer, contentType) {
   
     return true
 }
+
+export async function getUserProfileById(userId) {
+    if (typeof userId !== "string") {
+        throw new Error("invalid user id")
+    }
+
+    const db = await dbConnection()
+    const userCollection = db.collection("users")
+    const user = await userCollection.findOne({ userId: userId })
+
+    if(!user) {
+        throw new Error("invalid user id")
+    }
+
+    
+}
