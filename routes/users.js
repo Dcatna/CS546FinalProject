@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, logIn, getProfilePicture, setProfilePicture } from "../data/users.js";
+import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById } from "../data/users.js";
 import { unpackSchedules, getSectionTimes } from "../data/courses.js";
 import multer from 'multer';
 
@@ -82,6 +82,31 @@ router.route("/profile").get(async (req, res) => {
         schedules: user.schedules,
         session: req.session
     })
+})
+
+router.route("/profile/:userId").get(async (req, res) => {
+    const targetUserId = req.params.userId
+
+    try {
+      const user = await getUserProfileById(targetUserId)
+      const viewerId = req.session.user?.userId
+      
+      if (!user.public && !isOwner) {
+        const referer = req.get("Referer") || "/"
+        return res.redirect(referer)
+      }
+
+      res.render("profile", {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        userId: user.userId,
+        createdAt: user.createdAt,
+        schedules: user.schedules,
+        isOwner: viewerId === user.userId
+      })
+    } catch (e) {
+      return res.status(404).render("error", { message: "User not found." })
+    }
 })
 
 router.route("/profile/image/:userId").get(async (req, res) => {
