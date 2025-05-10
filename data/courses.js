@@ -21,22 +21,22 @@ export const searchByClass = async (name, filters = {}) => {
         $and: [
           {
             $or: [
-              {"Course Section": { $regex: name, $options: 'i'}},
-              {"Course": { $regex: name, $options: 'i'}}
+              {course_section: { $regex: name, $options: 'i'}},
+              {course: { $regex: name, $options: 'i'}}
             ]
           }
         ]
     };
-    if(filters.year){
-      query.$and.push({"Year": filters.year});
-    }
-    if(filters.semester){
-      query.$and.push({"Semester": filters.semester});
-    }
+    // if(filters.year){
+    //   query.$and.push({"Year": filters.year});
+    // }
+    // if(filters.semester){
+    //   query.$and.push({"Semester": filters.semester});
+    // }
     try {
       const courses = await classColl.find(query).toArray();
       let filteredCourses = courses;
-      if(filters.level){
+      if(Array.isArray(filters.level) && filters.level.length > 0){
         filteredCourses = courses.filter(course => filters.level.includes(getLevel(course)));
       }
       return filteredCourses;
@@ -51,20 +51,20 @@ export const searchByProfessor = async (name, filters = {}) => {
     const query = {
         $and: [
           {
-            "Instructor": {$regex: name, $options: 'i'}
+            instructor: {$regex: name, $options: 'i'}
           }
         ]
     };
-  if(filters.year){
-    query.$and.push({"Year": filters.year});
-  }
-  if(filters.semester){
-    query.$and.push({"Semester": filters.semester});
-  }
+  // if(filters.year){
+  //   query.$and.push({"Year": filters.year});
+  // }
+  // if(filters.semester){
+  //   query.$and.push({"Semester": filters.semester});
+  // }
   try {
     const courses = await classColl.find(query).toArray();
     let filteredCourses = courses;
-    if(filters.level){
+    if(Array.isArray(filters.level) && filters.level.length > 0){
       filteredCourses = courses.filter(course => filters.level.includes(getLevel(course)));
       }
     return filteredCourses;
@@ -129,10 +129,10 @@ export const getSectionTimes = (schedule) => {
 }
 
 export const getLevel = (course) => {
-  const section = course["Course Section"];
-  const match = section.match(/\b(\d{3})\b/);
+  const section = course.course_section;
+  const match = section.match(/(\d{3})/);
   if (!match) return null;
   
   const num = parseInt(match[1], 10);
-  return num >= 500 ? "Graduate" : "Undergraduate";
+  return num >= 500 ? "grad" : "undergrad";
 }
