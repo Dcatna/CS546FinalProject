@@ -132,11 +132,11 @@ export async function getUserProfileById(userId) {
     if (typeof userId !== "string") {
         throw new Error("invalid user id")
     }
-    console.log(userId)
+
     const db = await dbConnection()
     const userCollection = db.collection("users")
     const user = await userCollection.findOne({ userId: userId })
-    console.log(user)
+
     if(!user) {
         throw new Error("invalid user id")
     }
