@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById, toggleUserPrivacyById } from "../data/users.js";
-import { unpackSchedules, getSectionTimes, searchByClass, searchByProfessor } from "../data/courses.js";
+import { unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, addSchedule } from "../data/courses.js";
 import multer from 'multer';
+import { Readable } from 'stream';
+import csv from 'csv-parser';
 
 const storage = multer.memoryStorage()
 const upload = multer({ storage })
@@ -10,7 +12,7 @@ const router = Router()
 router.route("/").get(async (req, res) => {
     // const user = req.session.user
 
-    res.render("signup") //idk
+    res.redirect("/register") //idk
 })
 
 router.route("/register").get(async (req, res) => {
@@ -81,6 +83,7 @@ router.route("/profile/:userId").get(async (req, res) => {
           return res.redirect(referer)
         }       
         res.render("profile", {
+          session: req.session,
           firstName: user.firstName,
           lastName: user.lastName,
           userId: user.userId,
@@ -139,7 +142,7 @@ router.post("/profile/upload", upload.single("profileImage"), async (req, res) =
         }
 
         await setProfilePicture(userId, file.buffer, file.mimetype)
-        res.redirect("/profile") //trigger refresh
+        res.redirect(`/profile/${userId}`) //trigger refresh
     } catch (e) {
         res.status(500).send("upload failed: " + e)
     }
@@ -147,7 +150,7 @@ router.post("/profile/upload", upload.single("profileImage"), async (req, res) =
 
 router.route("/schedules").get(async (req, res) => {
     if(!req.session || !req.session.user) {
-        return res.redirect("login")
+        return res.redirect("/login");
     }
 
     let schedules = await unpackSchedules(req.session.user.schedules);
@@ -155,8 +158,7 @@ router.route("/schedules").get(async (req, res) => {
         name: schedule.name,
         sections: getSectionTimes(schedule)
     }));
-    
-    console.log(schedules);
+
     res.render("schedules", {
         session: req.session,
         schedules: schedules
@@ -191,5 +193,61 @@ router.get('/search/results', async (req, res) => {
       res.status(500).send("Search failed");
     }
 });
+
+router.route("/csv/:name").get((req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+
+    const schedule = req.session.user.schedules.find(x => x.name === req.params.name);
+    try {
+        if (!schedule) throw 'Schedule not found';
+        res.header('Content-Type', 'text/csv');
+        res.attachment('schedule.csv'); // prompts file download
+        res.send(scheduleToCSV(schedule));
+    }
+    catch (e){
+        res.status(404).render('error', {
+            session: req.session,
+            message: e
+        });
+    }
+})
+
+router.post("/schedules/upload", upload.single("scheduleCSV"), async (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+    try {
+        const userId = req.session.user.userId
+        const file = req.file
+        let schedule;
+
+        if (!file) {
+            return res.status(400).send("no file")
+        }
+
+        // Parse the CSV file
+        Readable.from(file.buffer)
+        .pipe(csv())
+        .on('data', (row) => {
+            schedule = row;
+            schedule.courses = JSON.parse(schedule.courses);
+        })
+        .on('end', async () => {
+            try {
+                await addSchedule(schedule, req.session);
+                res.redirect('/schedules')
+            }
+            catch (e) {res.status(500).render('error', {message: `Error parsing csv: ${e}`});}
+        })
+        .on('error', (err) => {
+            res.status(500).render('error', {message: `Error parsing csv: ${e}`});
+        });
+        
+    } catch (e) {
+        res.status(500).send("Upload failed: " + e)
+    }
+})
   
 export default router
