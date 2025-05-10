@@ -162,8 +162,11 @@ router.route("/schedules").get(async (req, res) => {
         schedules: schedules
     });
 })
-
-router.get('/search', async (req, res) => {
+router.get('/search', (req, res) => {
+    res.render('search'); 
+  });
+  
+router.get('/search/results', async (req, res) => {
     const { query, year, semester, level, format, professor } = req.query;
   
     const filters = {

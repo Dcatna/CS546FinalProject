@@ -1,12 +1,12 @@
-<form action="/search" method="GET">
-  <div class="search-bar">
-    <input type="text" name="query" placeholder="Search..." style="flex: 1;">
-    <button type="submit">Search</button>
-  </div>
+<form id="searchForm" action="/search/results" method="GET">
+  <fieldset class="filters">
+    <legend>Class Name</legend>
+    <input type="text" id="query" name="query" placeholder="Search by class name (optional)">
+  </fieldset>
 
   <fieldset class="filters">
     <legend>Professor</legend>
-    <input type="text" name="professor" placeholder="Search by professor (optional)">
+    <input type="text" id="professor" name="professor" placeholder="Search by professor (optional)">
   </fieldset>
 
   <fieldset class="filters">
@@ -24,6 +24,7 @@
     <div class="filter-group">
       <label for="year-select">Select Year:</label>
       <select name="year" id="year-select">
+        <option value="">-- Any Year --</option>
         <option value="2025">2025</option>
         <option value="2026">2026</option>
         <option value="2027">2027</option>
@@ -41,4 +42,7 @@
       <label><input type="radio" name="semester" value="spring">Spring</label>
     </div>
   </fieldset>
-</form>
+
+  <div id="error" style="color: red;"></div>
+
+  <button type="submit">Search</button>
