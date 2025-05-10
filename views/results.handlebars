@@ -1,0 +1,18 @@
+<h1>Search Results</h1>
+
+  {{#if courses.length}}
+    <ul class="course-list">
+      {{#each courses}}
+        <li class="course-item">
+          <strong>{{this.Course}}</strong><br>
+          <em>Professor:</em> {{this.Professor}}<br>
+          <em>Year:</em> {{this.Year}}, <em>Semester:</em> {{this.Semester}}<br>
+          <em>Format:</em> {{this.Format}}
+        </li>
+      {{/each}}
+    </ul>
+  {{else}}
+    <p>No courses found matching your criteria.</p>
+  {{/if}}
+
+  <a href="/search">← Back to Search</a>
