@@ -45,7 +45,7 @@ export const searchByClass = async (name, filters = {}) => {
     }
 }
 
-export const searchByProfessor = async (name) => {
+export const searchByProfessor = async (name, filters = {}) => {
   if(!name || typeof name !== 'string') throw "Invalid name";
     const classColl = await courses();
     const query = {
