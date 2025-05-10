@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById } from "../data/users.js";
-import { unpackSchedules, getSectionTimes } from "../data/courses.js";
+import { unpackSchedules, getSectionTimes, searchByClass, searchByProfessor } from "../data/courses.js";
 import multer from 'multer';
 
 const storage = multer.memoryStorage()
@@ -156,4 +156,31 @@ router.route("/schedules").get(async (req, res) => {
         schedules: schedules
     });
 })
+
+router.get('/search', async (req, res) => {
+    const { query, year, semester, level, format, professor } = req.query;
+  
+    const filters = {
+      year,
+      semester,
+      level: Array.isArray(level) ? level : level ? [level] : [],
+      format: Array.isArray(format) ? format : format ? [format] : []
+    };
+  
+    try {
+      let results;
+  
+      if (professor) {
+        results = await searchByProfessor(professor, filters);
+      } else {
+        results = await searchByClass(query, filters);
+      }
+  
+      res.render('results', { courses: results, query, filters });
+    } catch (e) {
+      console.error(e);
+      res.status(500).send("Search failed");
+    }
+});
+  
 export default router
