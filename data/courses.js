@@ -14,31 +14,63 @@ export const getCourseById = async (id) => {
     return course;
 }
 
-export const searchByClass = async (name) => {
+export const searchByClass = async (name, filters = {}) => {
     if(!name || typeof name !== 'string') throw "Invalid name";
     const classColl = await courses();
+    const query = {
+        $and: [
+          {
+            $or: [
+              {"Course Section": { $regex: name, $options: 'i'}},
+              {"Course": { $regex: name, $options: 'i'}}
+            ]
+          }
+        ]
+    };
+    if(filters.year){
+      query.$and.push({"Year": filters.year});
+    }
+    if(filters.semester){
+      query.$and.push({"Semester": filters.semester});
+    }
     try {
-        const courses = await classColl.find({
-          $or: [
-            {"Course Section": { $regex: name, $options: 'i'}},
-            {"Course": { $regex: name, $options: 'i'}}
-          ]
-        }).limit(20);
-        return courses;
-      } catch (err) {
-        console.error('Error during search:', err);
+      const courses = await classColl.find(query).toArray();
+      let filteredCourses = courses;
+      if(filters.level){
+        filteredCourses = courses.filter(course => filters.level.includes(getLevel(course)));
       }
+      return filteredCourses;
+    } catch (err) {
+        console.error('Error during search:', err);
+    }
 }
 
 export const searchByProfessor = async (name) => {
-    if(!name || typeof name !== 'string') throw "Invalid name";
+  if(!name || typeof name !== 'string') throw "Invalid name";
     const classColl = await courses();
-    try {
-        const courses = await classColl.find({"Instructor": { $regex: name, $options: 'i' }}).limit(20);
-        return courses;
-      } catch (err) {
-        console.error('Error during search:', err);
+    const query = {
+        $and: [
+          {
+            "Instructor": {$regex: name, $options: 'i'}
+          }
+        ]
+    };
+  if(filters.year){
+    query.$and.push({"Year": filters.year});
+  }
+  if(filters.semester){
+    query.$and.push({"Semester": filters.semester});
+  }
+  try {
+    const courses = await classColl.find(query).toArray();
+    let filteredCourses = courses;
+    if(filters.level){
+      filteredCourses = courses.filter(course => filters.level.includes(getLevel(course)));
       }
+    return filteredCourses;
+  } catch (err) {
+    console.error('Error during search:', err);
+  }
 }
 
 const parseTimeRange = (rangeStr) => {
@@ -94,4 +126,13 @@ export const getSectionTimes = (schedule) => {
     }
   }
   return sections;
+}
+
+export const getLevel = (course) => {
+  const section = course["Course Section"];
+  const match = section.match(/\b(\d{3})\b/);
+  if (!match) return null;
+  
+  const num = parseInt(match[1], 10);
+  return num >= 500 ? "Graduate" : "Undergraduate";
 }
