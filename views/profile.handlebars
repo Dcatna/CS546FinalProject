@@ -1,21 +1,21 @@
 <div class="profile-container">
   <div class="profile-header">
     <form id="profileImageForm" action="/profile/upload" method="POST" enctype="multipart/form-data">
-    <div class="profile-picture-section" id="profilePictureClickable">
+      <div class="profile-picture-section" id="profilePictureClickable">
         <img
-        src="/profile/image/{{userId}}"
-        alt="Profile Picture"
-        class="profile-picture"
-        onerror="this.onerror=null; this.src='/public/user_default.jpg';"
+          src="/profile/image/{{userId}}"
+          alt="Profile Picture"
+          class="profile-picture"
+          onerror="this.onerror=null; this.src='/public/user_default.jpg';"
         />
         <input
-        type="file"
-        id="profileImageInput"
-        name="profileImage"
-        accept="image/*"
-        style="display: none;"
+          type="file"
+          id="profileImageInput"
+          name="profileImage"
+          accept="image/*"
+          style="display: none;"
         />
-    </div>
+      </div>
     </form>
     <div class="profile-info">
       <h2><strong>Name:</strong> {{firstName}} {{lastName}}</h2>
@@ -23,6 +23,22 @@
       <p><strong>Joined:</strong> {{createdAt}}</p>
     </div>
   </div>
+
+  {{#if isOwner}}
+    <form action="/profile/toggle-privacy" method="POST" class="privacy-toggle-form">
+      <label class="privacy-switch">
+        <input type="checkbox" name="public" value="on" onchange="setTimeout(() => this.form.submit(), 10)" {{#if public}}checked{{/if}} />        
+        <span class="slider"></span>
+      </label>
+      <span class="privacy-label">
+        {{#if public}}
+          Your profile is <strong>Public</strong>
+        {{else}}
+          Your profile is <strong>Private</strong>
+        {{/if}}
+      </span>
+    </form>
+  {{/if}}
 
   <div class="profile-tabs">
     <button class="active">Schedules</button>

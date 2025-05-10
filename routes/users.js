@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById } from "../data/users.js";
+import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById, toggleUserPrivacyById } from "../data/users.js";
 import { unpackSchedules, getSectionTimes, searchByClass, searchByProfessor } from "../data/courses.js";
 import multer from 'multer';
 
@@ -15,7 +15,7 @@ router.route("/").get(async (req, res) => {
 
 router.route("/register").get(async (req, res) => {
     if (req.session && req.session.user) {
-        return res.redirect("/profile")
+        return res.redirect(`/profile/${req.session.user.userId}`)
     }
     res.render("signup", {session: req.session})
 }).post(async (req, res) => {
@@ -42,7 +42,7 @@ router.route("/register").get(async (req, res) => {
 
 router.route("/login").get(async (req, res) => {
     if(req.session && req.session.user) {
-        return res.redirect("/profile")
+        return res.redirect(`/profile/${req.session.user.userId}`)
     }
     res.render("signin", {session: req.session})
 }).post(async (req, res) => {
@@ -58,7 +58,7 @@ router.route("/login").get(async (req, res) => {
             createdAt: user.createdAt,
             schedules: user.schedules
         }
-        return res.redirect("/profile")
+        return res.redirect(`/profile/${user.userId}`)
     } catch (e) {
         console.log(e);
         return res.status(400).render("signin", {
@@ -69,45 +69,51 @@ router.route("/login").get(async (req, res) => {
 
 })
 
-router.route("/profile").get(async (req, res) => {
-    if(!req.session || !req.session.user) {
-        return res.redirect("login")
-    }
-    const user = req.session.user
-    res.render("profile", {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        userId: user.userId,
-        createdAt: user.createdAt,
-        schedules: user.schedules,
-        session: req.session
-    })
-})
-
 router.route("/profile/:userId").get(async (req, res) => {
     const targetUserId = req.params.userId
 
     try {
-      const user = await getUserProfileById(targetUserId)
-      const viewerId = req.session.user?.userId
-      
-      if (!user.public && !isOwner) {
-        const referer = req.get("Referer") || "/"
-        return res.redirect(referer)
-      }
-
-      res.render("profile", {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        userId: user.userId,
-        createdAt: user.createdAt,
-        schedules: user.schedules,
-        isOwner: viewerId === user.userId
-      })
+        const user = await getUserProfileById(targetUserId)
+        const viewerId = req.session.user?.userId
+        const isOwner = viewerId === user.userId        
+        if (!user.public && !isOwner) {
+          const referer = req.get("Referer") || "/"
+          return res.redirect(referer)
+        }       
+        res.render("profile", {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          userId: user.userId,
+          createdAt: user.createdAt,
+          schedules: user.schedules,
+          isOwner: viewerId === user.userId,
+          public: user.public
+        })
     } catch (e) {
-      return res.status(404).render("error", { message: "User not found." })
+        return res.status(404).render("error", { message: e.message })
     }
 })
+
+router.route("/profile/toggle-privacy").post(async (req, res) => {
+    try {
+      const user = req.session.user
+      if (!user) {
+        return res.status(401).render("error", { message: "Not logged in" })
+      }
+  
+      const newSetting = req.body.public === "on"
+  
+      const result = await  toggleUserPrivacyById(user.userId, newSetting)
+      if (!result) {
+        return res.status(500).render("error", { message: "Failed to update profile privacy" })
+      }
+  
+      return res.redirect(`/profile/${user.userId}`)
+    } catch (e) {
+      return res.status(500).render("error", { message: e.message })
+    }
+})
+  
 
 router.route("/profile/image/:userId").get(async (req, res) => {
     try {

@@ -15,7 +15,7 @@
             {{#if (isLoggedIn session)}}
                 <li><a href="/search">Course Search</a></li>
                 <li><a href="/schedules">My Schedules</a></li>
-                <li><a href="/profile">Profile</a></li>
+                <li><a href="/profile/{{session.user.userId}}">Profile</a></li>
             {{else}}
                 <li><a href="/register">Sign Up</a></li>
                 <li><a href="/login">Sign In</a></li>

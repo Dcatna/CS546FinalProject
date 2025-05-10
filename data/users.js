@@ -50,7 +50,8 @@ export async function register(userId, firstName, lastName, emailAddr, password)
         emailAddr: emailAddr,
         createdAt: currDay,
         schedules: [],
-        profileImage: null
+        profileImage: null,
+        public: true
     }
 
     const insertRes = await userCollection.insertOne(user)
@@ -131,14 +132,39 @@ export async function getUserProfileById(userId) {
     if (typeof userId !== "string") {
         throw new Error("invalid user id")
     }
-
+    console.log(userId)
     const db = await dbConnection()
     const userCollection = db.collection("users")
     const user = await userCollection.findOne({ userId: userId })
-
+    console.log(user)
     if(!user) {
         throw new Error("invalid user id")
     }
-
+    return user
     
+}
+
+export async function toggleUserPrivacyById(userId, isPublic) {
+    if (typeof userId !== 'string') {
+        throw new Error("invalid user id")
+      }
+    
+      const db = await dbConnection()
+      const userCollection = db.collection("users")
+    
+      const user = await userCollection.findOne({ userId: userId })
+      if (!user) {
+        throw new Error("user not found")
+      }
+    
+      const result = await userCollection.updateOne(
+        { userId: userId },
+        { $set: { public: isPublic } }
+      )
+  
+      if (result.modifiedCount === 0) {
+        throw new Error("failed to update profile picture")
+      }
+      return true
+
 }
