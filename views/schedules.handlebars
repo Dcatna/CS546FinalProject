@@ -1,15 +1,16 @@
-
-<form id="scheduleCsvForm" action="/schedules/upload" method="POST" enctype="multipart/form-data">
-  <input
-      type="file"
-      id="scheduleCsvInput"
-      name="scheduleCSV"
-      accept="text/csv"
-      required
-  >
-  <input type="submit" value="Submit">
-</form>
-
+<div class="schedule-upload-container">
+  <h2>Upload a schedule from a .csv here:</h2>
+  <form id="scheduleCsvForm" action="/schedules/upload" method="POST" enctype="multipart/form-data">
+    <input
+        type="file"
+        id="scheduleCsvInput"
+        name="scheduleCSV"
+        accept="text/csv"
+        required
+    >
+    <input type="submit" value="Submit">
+  </form>
+</div>
 {{#each schedules}}
 <h1>{{name}}</h1>
 

@@ -160,13 +160,14 @@ export const addSchedule = async (schedule, session) => {
   //check if all the courses in the new schedule exist. In theory this should happen in parallel, but idk async stuff is weird
   await Promise.all(schedule.courses.map(async (courseId) => {
     if (!await coursesCollection.findOne({_id: new ObjectId(courseId)})) throw 'Course does not exist';
+    
   }))
   //check if the user already has a schedule with this name
   for (const userSchedule of session.user.schedules){
     if (userSchedule.name == schedule.name) throw 'Schedule with that name already exists';
   }
 
-  const res = await usersCollection.findOneAndUpdate({userId: session.user.userId}, {$push: {schedules: {name: schedule.name, courses: new ObjectId(schedule.courses)}}});
+  const res = await usersCollection.findOneAndUpdate({userId: session.user.userId}, {$push: {schedules: {name: schedule.name, courses: schedule.courses.map(cId => new ObjectId(cId))}}});
   if (!res) throw 'Error updating database';
   session.user.schedules.push({name: schedule.name, courses: schedule.courses});
 }
