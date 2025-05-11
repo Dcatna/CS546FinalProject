@@ -148,6 +148,12 @@ router.post("/profile/upload", upload.single("profileImage"), async (req, res) =
     }
 })
 
+router.post("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.redirect("/login")
+  })
+})
+
 router.route("/schedules").get(async (req, res) => {
     if(!req.session || !req.session.user) {
         return res.redirect("/login");

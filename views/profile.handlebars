@@ -25,20 +25,27 @@
   </div>
 
   {{#if isOwner}}
-    <form action="/profile/toggle-privacy" method="POST" class="privacy-toggle-form">
-      <label class="privacy-switch">
-        <input type="checkbox" name="public" value="on" onchange="setTimeout(() => this.form.submit(), 10)" {{#if public}}checked{{/if}} />        
-        <span class="slider"></span>
-      </label>
-      <span class="privacy-label">
-        {{#if public}}
-          Your profile is <strong>Public</strong>
-        {{else}}
-          Your profile is <strong>Private</strong>
-        {{/if}}
-      </span>
-    </form>
+    <div class="owner-controls">
+      <form action="/profile/toggle-privacy" method="POST" class="privacy-toggle-form">
+        <label class="privacy-switch">
+          <input type="checkbox" name="public" value="on" onchange="setTimeout(() => this.form.submit(), 10)" {{#if public}}checked{{/if}} />        
+          <span class="slider"></span>
+        </label>
+        <span class="privacy-label">
+          {{#if public}}
+            Your profile is <strong>Public</strong>
+          {{else}}
+            Your profile is <strong>Private</strong>
+          {{/if}}
+        </span>
+      </form>
+
+      <form action="/logout" method="POST" class="signout-form">
+        <button type="submit" class="signout-button">Sign Out</button>
+      </form>
+    </div>
   {{/if}}
+
 
   <div class="profile-tabs">
     <button class="active">Schedules</button>
