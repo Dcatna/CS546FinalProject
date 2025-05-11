@@ -1,0 +1,67 @@
+<div class="schedule-grid">
+  <!-- Top-left empty cell -->
+  <div class="cell header"></div>
+  <div class="cell header">Monday</div>
+  <div class="cell header">Tuesday</div>
+  <div class="cell header">Wednesday</div>
+  <div class="cell header">Thursday</div>
+  <div class="cell header">Friday</div>
+
+  <!-- Time slots + empty schedule cells -->
+  <!-- Repeat as many time slots as you need -->
+  <div class="cell time-label">08:00am</div>
+  <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+
+  <div class="cell time-label">09:00am</div>
+  <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+
+  <div class="cell time-label">10:00am</div>
+  <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+
+  <div class="cell time-label">11:00am</div>
+  <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+
+  <div class="cell time-label">12:00pm</div>
+  <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+
+  <div class="cell time-label">1:00pm</div>
+  <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+
+  <div class="cell time-label">2:00pm</div>
+  <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+
+  <div class="cell time-label">3:00pm</div>
+  <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+
+  <div class="cell time-label">4:00pm</div>
+  <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+
+  <div class="cell time-label">5:00pm</div>
+  <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+
+  <div class="cell time-label">6:00pm</div>
+  <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+
+  <div class="cell time-label">7:00pm</div>
+  <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+
+  <div class="cell time-label">8:00pm</div>
+  <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+
+  <div class="cell time-label">9:00pm</div>
+  <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+
+  <div class="cell time-label">10:00pm</div>
+  <div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div>
+
+{{#each sections}}
+  <div class="class-block" style="
+    left: calc(100px + {{day}} * ((100% - 100px) / 5)); /* skip time column; monday=0, etc */
+    top: calc(({{startTime}} - 7) * (100% / 16));  /* skip header row */
+    width: calc((100% - 100px) / 5);
+    height: calc({{duration}} * (100% / 16)); /* 2 time slots */
+  ">
+    {{name}}
+  </div>
+{{/each}}
+</div>

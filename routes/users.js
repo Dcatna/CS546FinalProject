@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById, toggleUserPrivacyById } from "../data/users.js";
-import { unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, addSchedule } from "../data/courses.js";
+import { getCourseById, unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, addSchedule, conflicts } from "../data/courses.js";
 import multer from 'multer';
 import { Readable } from 'stream';
 import csv from 'csv-parser';
@@ -165,7 +165,7 @@ router.route("/schedules").get(async (req, res) => {
     });
 })
 router.get('/search', (req, res) => {
-    res.render('search'); 
+    res.render('search', {session: req.session}); 
   });
   
 router.get('/search/results', async (req, res) => {
@@ -247,6 +247,28 @@ router.post("/schedules/upload", upload.single("scheduleCSV"), async (req, res) 
         
     } catch (e) {
         res.status(500).send("Upload failed: " + e)
+    }
+})
+
+router.route("/course/:courseId").get(async (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+    try {
+        const course = await getCourseById(req.params.courseId);
+
+        let schedules = await unpackSchedules(req.session.user.schedules);
+        schedules = schedules.map(schedule => {
+            schedule.courses.push(course);
+            const sections = getSectionTimes(schedule)
+            return { name: schedule.name, sections: sections, conflicting: conflicts(sections)};
+        });
+
+
+        res.render('course', {session: req.session, ...course, schedules: schedules});
+    }
+    catch (e){
+        res.status(400).render('error', {message: e, session: req.session});
     }
 })
   

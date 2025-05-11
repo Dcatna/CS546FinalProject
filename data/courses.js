@@ -166,7 +166,26 @@ export const addSchedule = async (schedule, session) => {
     if (userSchedule.name == schedule.name) throw 'Schedule with that name already exists';
   }
 
-  const res = await usersCollection.findOneAndUpdate({userId: session.user.userId}, {$push: {schedules: {name: schedule.name, courses: schedule.courses}}});
+  const res = await usersCollection.findOneAndUpdate({userId: session.user.userId}, {$push: {schedules: {name: schedule.name, courses: new ObjectId(schedule.courses)}}});
   if (!res) throw 'Error updating database';
   session.user.schedules.push({name: schedule.name, courses: schedule.courses});
+}
+
+//expects an array of sections, as returned by getSectionTimes above
+export const conflicts = (sections) => {
+  for (let i = 1; i < sections.length; i++){
+    for (let j = 0; j < i; j++){
+    
+      const sect1 = sections[i];
+      const sect2 = sections[j];
+
+      if (sect1.day != sect2.day) continue;
+
+      const end1 = sect1.startTime + sect1.duration;
+      const end2 = sect2.startTime + sect2.duration;
+
+      // Check if sect1 and sect2 overlap
+      if (sect1.startTime < end2 && sect2.startTime < end1) return true;
+    }
+  }
 }

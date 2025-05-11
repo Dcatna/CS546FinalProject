@@ -4,7 +4,7 @@
     <ul class="course-list">
       {{#each courses}}
         <li class="course-item">
-          <strong>{{this.course_section}}</strong><br>
+          <strong><a href="/course/{{_id}}">{{this.course_section}}</a></strong><br>
           <em>Professor:</em> {{this.instructor}}<br>
           <em>Year:</em> {{this.Year}}, <em>Semester:</em> {{this.semester}}<br>
           <em>Format:</em> {{this.format}}

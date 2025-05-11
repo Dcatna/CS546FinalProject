@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("SDFSDF")
+
     const profilePicContainer = document.getElementById("profilePictureClickable")
     const fileInput = document.getElementById("profileImageInput")
     const form = document.getElementById("profileImageForm")
@@ -105,5 +105,17 @@ document.addEventListener("DOMContentLoaded", () => {
             error.hidden = true;
             error.textContent = "";
         })
+    }
+
+    const scheduleSelect = document.getElementById("schedule-select");
+    if (scheduleSelect){
+
+        const refreshSchedule = () => {
+            Array.from(document.querySelectorAll(`.potential-schedule`)).map(el => el.setAttribute("hidden", ""));
+            document.querySelector(`.potential-schedule[name="${scheduleSelect.value}"]`).removeAttribute("hidden");
+        }
+        refreshSchedule();
+        scheduleSelect.addEventListener('change', refreshSchedule)
+        
     }
 })

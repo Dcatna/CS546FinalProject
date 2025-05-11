@@ -1,0 +1,31 @@
+<h1>{{this.course_section}}</h1><br>
+<em>Professor:</em> {{instructor}}<br>
+<em>Location:</em> {{location}}<br>
+<em>Meeting Pattern:</em> {{days}} {{time}}
+
+<h2>View in Schedule:</h2>
+
+{{#if schedules}}
+<select id="schedule-select">
+    {{#each schedules}}
+    <option value="{{name}}">{{name}}</option>
+    {{/each}}
+</select>
+{{else}}
+<h3>No schedules found</h3>
+{{/if}}
+
+{{#each schedules}}
+<div class="potential-schedule" name="{{name}}" hidden>
+<h1>{{name}}</h1>
+{{#if conflicting}}
+<p class="warning">Warning: conflicting times</p>
+{{else}}
+<p>[Todo: put "Add To Schedule" button here]</p>
+{{/if}}
+
+{{> schedule}}
+
+</div>
+{{/each}}
+
