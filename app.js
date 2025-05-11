@@ -31,10 +31,4 @@ app.listen(3000, () => {
     console.log("Server is running on 3000")
 })
 
-app.use('/search', (req, res, next) => {
-  if (req.method != 'GET') next();
-  else if (!req.session || !req.session.user)
-     res.redirect('/login');
-});
-
 

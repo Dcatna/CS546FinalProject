@@ -165,10 +165,16 @@ router.route("/schedules").get(async (req, res) => {
     });
 })
 router.get('/search', (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login")
+    }
     res.render('search', {session: req.session}); 
   });
   
 router.get('/search/results', async (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login")
+    }
     const { query, year, semester, level, format, professor } = req.query;
   
     const filters = {
