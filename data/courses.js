@@ -112,15 +112,31 @@ export const unpackSchedules = async (schedules) => {
 export const getSectionTimes = (schedule) => {
   const sections = [];
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const colors = [
+    "#f0c674", "#b5bd68", "#81a2be", "#de935f", "#cc6666",
+    "#8abeb7", "#c5b87d", "#b294bb", "#a3685a", "#c0c0c0"
+  ];
+
+  function hashStringToColorIndex(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash) % colors.length;
+  }
+
   for (const course of schedule.courses){
     try {
       const { startTime, duration } = parseTimeRange(course.time);
+      const color = colors[hashStringToColorIndex(course.course)];
     for (const day of course.days.split("/")){
       sections.push({
         name: course.course,
+        time: course.time,
         startTime: startTime,
         duration: duration,
-        day: daysOfWeek.indexOf(day)
+        day: daysOfWeek.indexOf(day),
+        color: color
       })
     }
     }
