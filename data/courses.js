@@ -16,18 +16,19 @@ export const getCourseById = async (id) => {
 }
 
 export const searchByClass = async (name, filters = {}) => {
-    if(!name || typeof name !== 'string') throw "Invalid name";
     const classColl = await courses();
-    const query = {
-        $and: [
-          {
+    const query = { $and: [] };
+
+    // Only add name-based search if name is a non-empty string
+    if (typeof name === 'string' && name.trim().length > 0) {
+        query.$and.push({
             $or: [
-              {course_section: { $regex: name, $options: 'i'}},
-              {course: { $regex: name, $options: 'i'}}
+                { course_section: { $regex: name.trim(), $options: 'i' } },
+                { course: { $regex: name.trim(), $options: 'i' } }
             ]
-          }
-        ]
-    };
+        });
+    }
+    const finalQuery = query.$and.length > 0 ? query : {};
     // if(filters.year){
     //   query.$and.push({"Year": filters.year});
     // }
@@ -35,7 +36,7 @@ export const searchByClass = async (name, filters = {}) => {
     //   query.$and.push({"Semester": filters.semester});
     // }
     try {
-      const courses = await classColl.find(query).toArray();
+      const courses = await classColl.find(finalQuery).toArray();
       let filteredCourses = courses;
       if(Array.isArray(filters.level) && filters.level.length > 0){
         filteredCourses = courses.filter(course => filters.level.includes(getLevel(course)));
@@ -47,15 +48,16 @@ export const searchByClass = async (name, filters = {}) => {
 }
 
 export const searchByProfessor = async (name, filters = {}) => {
-  if(!name || typeof name !== 'string') throw "Invalid name";
-    const classColl = await courses();
-    const query = {
-        $and: [
-          {
-            instructor: {$regex: name, $options: 'i'}
-          }
-        ]
-    };
+  const classColl = await courses();
+  const query = { $and: [] };
+
+  if (typeof name === 'string' && name.trim().length > 0) {
+    query.$and.push({
+      instructor: { $regex: name.trim(), $options: 'i' }
+    });
+  }
+
+  const finalQuery = query.$and.length > 0 ? query : {};
   // if(filters.year){
   //   query.$and.push({"Year": filters.year});
   // }
@@ -63,7 +65,7 @@ export const searchByProfessor = async (name, filters = {}) => {
   //   query.$and.push({"Semester": filters.semester});
   // }
   try {
-    const courses = await classColl.find(query).toArray();
+    const courses = await classColl.find(finalQuery).toArray();
     let filteredCourses = courses;
     if(Array.isArray(filters.level) && filters.level.length > 0){
       filteredCourses = courses.filter(course => filters.level.includes(getLevel(course)));
