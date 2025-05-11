@@ -18,7 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const signup = document.getElementById("signup-form")
     const signin = document.getElementById("signin-form")
-    console.log("👀 Signin form:", signin);
     if(signup) {
         const error = document.getElementById("error-signup")
         signup.addEventListener("submit", (e) => {
