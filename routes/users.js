@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById, toggleUserPrivacyById } from "../data/users.js";
-import { getCourseById, unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, addSchedule, conflicts, addToSchedule } from "../data/courses.js";
+import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById, toggleUserPrivacyById, addSchedule, removeSchedule } from "../data/users.js";
+import { getCourseById, unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, conflicts, addToSchedule } from "../data/courses.js";
 import multer from 'multer';
 import { Readable } from 'stream';
 import csv from 'csv-parser';
@@ -271,13 +271,15 @@ router.route("/course/:courseId").get(async (req, res) => {
         if (!course) throw 'Course not found';
         
         let schedules = await unpackSchedules(req.session.user.schedules);
+        const selectedSchedule = req.query.schedule;
+
         schedules = schedules.map(schedule => {
             const alreadyContains = (schedule.courses.find(x => x._id.toString() == course._id.toString()) != undefined)
             if (!alreadyContains) schedule.courses.push(course);
             const sections = getSectionTimes(schedule)
-            return { name: schedule.name, sections: sections, conflicting: conflicts(sections), alreadyContains: alreadyContains};
+            return { name: schedule.name, sections: sections, conflicting: conflicts(sections), alreadyContains: alreadyContains, selected: (schedule.name == selectedSchedule)};
         });
-
+        
 
         res.render('course', {session: req.session, ...course, schedules: schedules});
     }
@@ -292,7 +294,21 @@ router.route("/course/:courseId").get(async (req, res) => {
     try {
         if (!req.body.scheduleSelect) throw 'No schedule selected';
         await addToSchedule(req.body.scheduleSelect, req.params.courseId, req.session);
-        res.redirect(`/course/${req.params.courseId}`)
+        return res.redirect(`/course/${req.params.courseId}?schedule=${encodeURIComponent(req.body.scheduleSelect)}`)
+    }
+    catch (e){
+        res.status(400).render('error', {message: e, session: req.session});
+    }
+})
+
+router.route("/delete/:name").post(async (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+
+    try {
+        await removeSchedule(req.params.name, req.session);
+        return res.redirect('/schedules')
     }
     catch (e){
         res.status(400).render('error', {message: e, session: req.session});

@@ -133,3 +133,9 @@ document.addEventListener("DOMContentLoaded", () => {
         
     }
 })
+const confirmDeletion = (event) => {
+    const confirmed = confirm("Are you sure you want to delete this schedule?");
+    if (!confirmed) {
+        event.preventDefault(); // Stop form from submitting
+    }
+}

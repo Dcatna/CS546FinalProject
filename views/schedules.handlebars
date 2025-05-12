@@ -13,7 +13,13 @@
 </div>
 {{#each schedules}}
 <h1>{{name}}</h1>
-<a href="/csv/{{name}}">Export to csv</a>
+
+<form action="/csv/{{name}}" method="GET" style="display: inline">
+    <input type="submit" name="Export to CSV" value="Export to CSV">
+</form>
+<form onsubmit="confirmDeletion(event)" action="/delete/{{name}}" method="POST" style="display: inline">
+    <input type="submit" name="Delete Schedule" value="Delete Schedule">
+</form>
 {{> schedule}}
 {{/each}}
 

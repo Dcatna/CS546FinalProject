@@ -9,7 +9,11 @@
 <form id="add-to-schedule" action="/course/{{_id}}" method="POST">
     <select id="schedule-select" name="scheduleSelect">
         {{#each schedules}}
+        {{#if selected}}
+        <option value="{{name}}" selected>{{name}}</option>
+        {{else}}
         <option value="{{name}}">{{name}}</option>
+        {{/if}}
         {{/each}}
     </select><br><br>
 
@@ -28,7 +32,7 @@
     <p class="warning">Warning: conflicting times</p>
     {{/if}}
     {{#if alreadyContains}}
-    <p class="already-added">Section already added</p>
+    <p class="already-added">Section added</p>
     {{/if}}
     <h1>{{name}}</h1>
 
