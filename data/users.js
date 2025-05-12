@@ -50,7 +50,8 @@ export async function register(userId, firstName, lastName, emailAddr, password)
         createdAt: currDay,
         schedules: [],
         profileImage: null,
-        public: true
+        public: true,
+        comments: []
     }
 
     const insertRes = await userCollection.insertOne(user)
