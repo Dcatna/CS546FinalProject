@@ -190,3 +190,31 @@ export const conflicts = (sections) => {
     }
   }
 }
+
+export const addToSchedule = async (scheduleName, courseId, session) => {
+  
+  if (!session || !session.user) throw 'Invalid session';
+  if (typeof(scheduleName) != 'string') throw 'Invalid schedule name';
+
+  const coursesCollection = await courses();
+  const usersCollection = await users();
+
+  if (!await coursesCollection.findOne({_id: new ObjectId(courseId)})) throw 'No course with that id exists';
+  const scheduleIdx = session.user.schedules.findIndex(schedule => schedule.name === scheduleName);
+  if (scheduleIdx == -1) throw 'No schedule with that name exists';
+  if (session.user.schedules[scheduleIdx].courses.indexOf(courseId) != -1) throw 'Schedule already contains section'
+
+  const res = await usersCollection.findOneAndUpdate({userId: session.user.userId}, {
+    $push: {
+      "schedules.$[schedule].courses": new ObjectId(courseId)
+    }
+  },
+  {
+    arrayFilters: [
+      { "schedule.name": scheduleName }
+    ]
+  })
+  if (!res) throw "Unable to update schedule";
+
+  session.user.schedules[scheduleIdx].courses.push(new ObjectId(courseId));
+}

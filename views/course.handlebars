@@ -6,25 +6,33 @@
 <h2>View in Schedule:</h2>
 
 {{#if schedules}}
-<select id="schedule-select">
-    {{#each schedules}}
-    <option value="{{name}}">{{name}}</option>
-    {{/each}}
-</select>
+<form id="add-to-schedule" action="/course/{{_id}}" method="POST">
+    <select id="schedule-select" name="scheduleSelect">
+        {{#each schedules}}
+        <option value="{{name}}">{{name}}</option>
+        {{/each}}
+    </select><br><br>
+
+    <label for="submit-add-to-schedule">Add to Schedule</label><br>
+    <input id="submit-add-to-schedule" type="submit">
+
+</form>
 {{else}}
 <h3>No schedules found</h3>
 {{/if}}
 
 {{#each schedules}}
-<div class="potential-schedule" name="{{name}}" hidden>
-<h1>{{name}}</h1>
-{{#if conflicting}}
-<p class="warning">Warning: conflicting times</p>
-{{else}}
-<p>[Todo: put "Add To Schedule" button here]</p>
-{{/if}}
 
-{{> schedule}}
+<div class="potential-schedule" name="{{name}}" hidden>
+    {{#if conflicting}}
+    <p class="warning">Warning: conflicting times</p>
+    {{/if}}
+    {{#if alreadyContains}}
+    <p class="already-added">Section already added</p>
+    {{/if}}
+    <h1>{{name}}</h1>
+
+    {{> schedule}}
 
 </div>
 {{/each}}

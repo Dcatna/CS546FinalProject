@@ -108,11 +108,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const scheduleSelect = document.getElementById("schedule-select");
+    
     if (scheduleSelect){
+        
+        const potentialSchedules = Array.from(document.querySelectorAll(`.potential-schedule`))
+        const submitButton = document.getElementById("submit-add-to-schedule");
+        const submitLabel = document.querySelector("label");
 
         const refreshSchedule = () => {
-            Array.from(document.querySelectorAll(`.potential-schedule`)).map(el => el.setAttribute("hidden", ""));
-            document.querySelector(`.potential-schedule[name="${scheduleSelect.value}"]`).removeAttribute("hidden");
+            potentialSchedules.map(el => el.setAttribute("hidden", ""));
+            const thisScheduleDiv = document.querySelector(`.potential-schedule[name="${scheduleSelect.value}"]`)
+            thisScheduleDiv.removeAttribute("hidden");
+            if (thisScheduleDiv.querySelector('.already-added, .warning')){
+                submitButton.setAttribute("hidden", "");
+                submitLabel.setAttribute("hidden", "");
+            }
+            else {
+                submitButton.removeAttribute("hidden");
+                submitLabel.removeAttribute("hidden");
+            }
         }
         refreshSchedule();
         scheduleSelect.addEventListener('change', refreshSchedule)
