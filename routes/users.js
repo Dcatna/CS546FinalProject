@@ -206,7 +206,7 @@ router.get('/search/results', async (req, res) => {
     }
 });
 
-router.route("/csv/:name").get((req, res) => {
+router.route("/schedules/csv/:name").get((req, res) => {
     if(!req.session || !req.session.user) {
         return res.redirect("/login");
     }
@@ -279,7 +279,6 @@ router.route("/course/:courseId").get(async (req, res) => {
             const sections = getSectionTimes(schedule)
             return { name: schedule.name, sections: sections, conflicting: conflicts(sections), alreadyContains: alreadyContains, selected: (schedule.name == selectedSchedule)};
         });
-        
 
         res.render('course', {session: req.session, ...course, schedules: schedules});
     }
@@ -301,7 +300,15 @@ router.route("/course/:courseId").get(async (req, res) => {
     }
 })
 
-router.route("/delete/:name").post(async (req, res) => {
+router.route("/course/remove").post(async (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+
+    return res.redirect("/schedules")
+})
+
+router.route("/schedules/delete/:name").post(async (req, res) => {
     if(!req.session || !req.session.user) {
         return res.redirect("/login");
     }
@@ -309,6 +316,23 @@ router.route("/delete/:name").post(async (req, res) => {
     try {
         await removeSchedule(req.params.name, req.session);
         return res.redirect('/schedules')
+    }
+    catch (e){
+        res.status(400).render('error', {message: e, session: req.session});
+    }
+})
+
+router.route("/schedules/new").post(async (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+
+    try {
+        await addSchedule({
+            name: req.body.scheduleName,
+            courses: []
+        }, req.session);
+        res.redirect('/schedules');
     }
     catch (e){
         res.status(400).render('error', {message: e, session: req.session});

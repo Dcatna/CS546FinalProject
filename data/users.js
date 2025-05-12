@@ -169,9 +169,7 @@ export const addSchedule = async (schedule, session) => {
 
   if (!schedule) throw 'No schedule object';
   if (!session || !session.user) throw 'Invalid session';
-  if (!schedule.name || !schedule.courses) throw 'Invalid schedule properties';
-  if (typeof(schedule.name) != 'string') throw 'Invalid schedule name';
-  if (!Array.isArray(schedule.courses)) throw 'Invalid courses property';
+  if (!schedule.name || typeof(schedule.name) != 'string' || !Array.isArray(schedule.courses)) throw 'Invalid schedule properties';
   
   //check if all the courses in the new schedule exist. In theory this should happen in parallel, but idk async stuff is weird
   await Promise.all(schedule.courses.map(async (courseId) => {
