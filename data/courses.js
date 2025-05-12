@@ -112,15 +112,31 @@ export const unpackSchedules = async (schedules) => {
 export const getSectionTimes = (schedule) => {
   const sections = [];
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const colors = [
+    "#f0c674", "#b5bd68", "#81a2be", "#de935f", "#cc6666",
+    "#8abeb7", "#c5b87d", "#b294bb", "#a3685a", "#c0c0c0"
+  ];
+
+  function hashStringToColorIndex(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash) % colors.length;
+  }
+
   for (const course of schedule.courses){
     try {
       const { startTime, duration } = parseTimeRange(course.time);
+      const color = colors[hashStringToColorIndex(course.course)];
     for (const day of course.days.split("/")){
       sections.push({
         name: course.course,
+        time: course.time,
         startTime: startTime,
         duration: duration,
-        day: daysOfWeek.indexOf(day)
+        day: daysOfWeek.indexOf(day),
+        color: color
       })
     }
     }
@@ -147,31 +163,6 @@ export const scheduleToCSV = (schedule) => {
   return csv;
 }
 
-export const addSchedule = async (schedule, session) => {
-  const coursesCollection = await courses();
-  const usersCollection = await users();
-
-  if (!schedule) throw 'No schedule object';
-  if (!session || !session.user) throw 'Invalid session';
-  if (!schedule.name || !schedule.courses) throw 'Invalid schedule properties';
-  if (typeof(schedule.name) != 'string') throw 'Invalid schedule name';
-  if (!Array.isArray(schedule.courses)) throw 'Invalid courses property';
-  
-  //check if all the courses in the new schedule exist. In theory this should happen in parallel, but idk async stuff is weird
-  await Promise.all(schedule.courses.map(async (courseId) => {
-    if (!await coursesCollection.findOne({_id: new ObjectId(courseId)})) throw 'Course does not exist';
-    
-  }))
-  //check if the user already has a schedule with this name
-  for (const userSchedule of session.user.schedules){
-    if (userSchedule.name == schedule.name) throw 'Schedule with that name already exists';
-  }
-
-  const res = await usersCollection.findOneAndUpdate({userId: session.user.userId}, {$push: {schedules: {name: schedule.name, courses: schedule.courses.map(cId => new ObjectId(cId))}}});
-  if (!res) throw 'Error updating database';
-  session.user.schedules.push({name: schedule.name, courses: schedule.courses});
-}
-
 //expects an array of sections, as returned by getSectionTimes above
 export const conflicts = (sections) => {
   for (let i = 1; i < sections.length; i++){
@@ -189,4 +180,32 @@ export const conflicts = (sections) => {
       if (sect1.startTime < end2 && sect2.startTime < end1) return true;
     }
   }
+}
+
+export const addToSchedule = async (scheduleName, courseId, session) => {
+  
+  if (!session || !session.user) throw 'Invalid session';
+  if (typeof(scheduleName) != 'string') throw 'Invalid schedule name';
+
+  const coursesCollection = await courses();
+  const usersCollection = await users();
+
+  if (!await coursesCollection.findOne({_id: new ObjectId(courseId)})) throw 'No course with that id exists';
+  const scheduleIdx = session.user.schedules.findIndex(schedule => schedule.name === scheduleName);
+  if (scheduleIdx == -1) throw 'No schedule with that name exists';
+  if (session.user.schedules[scheduleIdx].courses.indexOf(courseId) != -1) throw 'Schedule already contains section'
+
+  const res = await usersCollection.findOneAndUpdate({userId: session.user.userId}, {
+    $push: {
+      "schedules.$[schedule].courses": new ObjectId(courseId)
+    }
+  },
+  {
+    arrayFilters: [
+      { "schedule.name": scheduleName }
+    ]
+  })
+  if (!res) throw "Unable to update schedule";
+
+  session.user.schedules[scheduleIdx].courses.push(new ObjectId(courseId));
 }

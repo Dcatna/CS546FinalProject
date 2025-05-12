@@ -56,12 +56,15 @@
 
 {{#each sections}}
   <div class="class-block" style="
+    background-color: {{color}};
     left: calc(100px + {{day}} * ((100% - 100px) / 5)); /* skip time column; monday=0, etc */
     top: calc(({{startTime}} - 7) * (100% / 16));  /* skip header row */
     width: calc((100% - 100px) / 5);
     height: calc({{duration}} * (100% / 16)); /* 2 time slots */
   ">
     {{name}}
+    <br></br>
+    {{time}}
   </div>
 {{/each}}
 </div>

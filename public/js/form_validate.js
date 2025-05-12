@@ -108,14 +108,40 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const scheduleSelect = document.getElementById("schedule-select");
+    
     if (scheduleSelect){
+        
+        const potentialSchedules = Array.from(document.querySelectorAll(`.potential-schedule`))
+        const submitButton = document.getElementById("submit-add-to-schedule");
 
         const refreshSchedule = () => {
-            Array.from(document.querySelectorAll(`.potential-schedule`)).map(el => el.setAttribute("hidden", ""));
-            document.querySelector(`.potential-schedule[name="${scheduleSelect.value}"]`).removeAttribute("hidden");
+            potentialSchedules.map(el => el.setAttribute("hidden", ""));
+            const thisScheduleDiv = document.querySelector(`.potential-schedule[name="${scheduleSelect.value}"]`)
+            thisScheduleDiv.removeAttribute("hidden");
+            if (thisScheduleDiv.querySelector('.already-added, .warning')){
+                submitButton.setAttribute("hidden", "");
+            }
+            else {
+                submitButton.removeAttribute("hidden");
+            }
         }
         refreshSchedule();
         scheduleSelect.addEventListener('change', refreshSchedule)
         
     }
+
+    const newSchedule = document.getElementById('new-schedule');
+    if (newSchedule){
+        newSchedule.addEventListener('submit', (event) => {
+            if (!newSchedule.elements['scheduleName'].value){
+                event.preventDefault();
+            }
+        })
+    }
 })
+const confirmDeletion = (event) => {
+    const confirmed = confirm("Are you sure you want to delete this schedule?");
+    if (!confirmed) {
+        event.preventDefault(); // Stop form from submitting
+    }
+}

@@ -1,4 +1,4 @@
-<div class="schedule-upload-container">
+<div class="schedule-options-container">
   <h2>Upload a schedule from a .csv here:</h2>
   <form id="scheduleCsvForm" action="/schedules/upload" method="POST" enctype="multipart/form-data">
     <input
@@ -11,9 +11,22 @@
     <input type="submit" value="Submit">
   </form>
 </div>
+<div class="schedule-options-container">
+  <h2>Create a schedule:</h2>
+  <form id="new-schedule" action="/schedules/new" method="POST">
+    <input type="text" name="scheduleName" placeholder="Schedule Name">
+    <input type="submit" name="Submit">
+  </form>
+</div>
 {{#each schedules}}
 <h1>{{name}}</h1>
 
+<form action="/schedules/csv/{{name}}" method="GET" style="display: inline">
+    <input type="submit" name="Export to CSV" value="Export to CSV">
+</form>
+<form onsubmit="confirmDeletion(event)" action="/schedules/delete/{{name}}" method="POST" style="display: inline">
+    <input type="submit" name="Delete Schedule" value="Delete Schedule">
+</form>
 {{> schedule}}
 {{/each}}
 

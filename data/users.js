@@ -1,7 +1,6 @@
 import { type } from "os";
-import { dbConnection } from "../config/mongoConnection.js";
 import bcrypt from 'bcrypt';
-
+import { courses, users } from "../config/mongoCollections.js";
 
 export async function register(userId, firstName, lastName, emailAddr, password) { //returns the valid user object
     //basic checks
@@ -20,8 +19,7 @@ export async function register(userId, firstName, lastName, emailAddr, password)
 
     //register logic
 
-    const db = await dbConnection()
-    const userCollection = db.collection("users")
+    const userCollection = await users()
     const duplicate = await userCollection.findOne({ userId: userId})
     if(duplicate) {
       throw new Error("duplicate userid")
@@ -72,8 +70,7 @@ export async function logIn(emailAddr, password) {
         throw new Error("invalid password")
     }
 
-    const db = await dbConnection()
-    const userCollection = db.collection("users")
+    const userCollection = await users()
     const user = await userCollection.findOne({ emailAddr: emailAddr })
     if(!user) {
         throw new Error("invalid email or password")
@@ -88,8 +85,8 @@ export async function logIn(emailAddr, password) {
 }
 
 export async function getProfilePicture(userId) {
-    const db = await dbConnection()
-    const userCollection = db.collection("users")
+
+    const userCollection = await users();
     const user = await userCollection.findOne({ userId: userId})
 
     if (!user) {
@@ -107,8 +104,7 @@ export async function getProfilePicture(userId) {
 }
 
 export async function setProfilePicture(userId, buffer, contentType) {
-    const db = await dbConnection()
-    const userCollection = db.collection("users")
+    const userCollection = await users();
   
     const result = await userCollection.updateOne(
       { userId: userId },
@@ -134,8 +130,7 @@ export async function getUserProfileById(userId) {
         throw new Error("invalid user id")
     }
 
-    const db = await dbConnection()
-    const userCollection = db.collection("users")
+    const userCollection = await users();
     const user = await userCollection.findOne({ userId: userId })
 
     if(!user) {
@@ -150,8 +145,7 @@ export async function toggleUserPrivacyById(userId, isPublic) {
         throw new Error("invalid user id")
       }
     
-      const db = await dbConnection()
-      const userCollection = db.collection("users")
+      const userCollection = await users();
     
       const user = await userCollection.findOne({ userId: userId })
       if (!user) {
@@ -168,4 +162,47 @@ export async function toggleUserPrivacyById(userId, isPublic) {
       }
       return true
 
+}
+
+export const addSchedule = async (schedule, session) => {
+  const coursesCollection = await courses();
+  const usersCollection = await users();
+
+  if (!schedule) throw 'No schedule object';
+  if (!session || !session.user) throw 'Invalid session';
+  if (!schedule.name || typeof(schedule.name) != 'string' || !Array.isArray(schedule.courses)) throw 'Invalid schedule properties';
+  
+  //check if all the courses in the new schedule exist. In theory this should happen in parallel, but idk async stuff is weird
+  await Promise.all(schedule.courses.map(async (courseId) => {
+    if (!await coursesCollection.findOne({_id: new ObjectId(courseId)})) throw 'Course does not exist';
+    
+  }))
+  //check if the user already has a schedule with this name
+  for (const userSchedule of session.user.schedules){
+    if (userSchedule.name == schedule.name) throw 'Schedule with that name already exists';
+  }
+
+  const res = await usersCollection.findOneAndUpdate({userId: session.user.userId}, {$push: {schedules: {name: schedule.name, courses: schedule.courses.map(cId => new ObjectId(cId))}}});
+  if (!res) throw 'Error updating database';
+  session.user.schedules.push({name: schedule.name, courses: schedule.courses});
+}
+
+export const removeSchedule = async (name, session) => {
+  if (!name) throw 'No name provided';
+  if (typeof(name) != 'string') throw 'Name not a string';
+  if (!session || !session.user) throw 'Invalid session';
+
+  const scheduleIdx = session.user.schedules.findIndex(schedule => schedule.name === name);
+  if (scheduleIdx == -1) throw 'No schedule with that name exists';
+
+  const usersCollection = await users();
+  const res = usersCollection.findOneAndUpdate(
+    {userId: session.user.userId},
+    { $pull: { schedules: { name: name } } }
+  );
+  if (res.modifiedCount == 0) {
+    throw 'Unable to remove schedule with that name';
+  }
+
+  session.user.schedules.splice(scheduleIdx, 1);
 }

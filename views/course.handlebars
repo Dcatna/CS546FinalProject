@@ -6,25 +6,39 @@
 <h2>View in Schedule:</h2>
 
 {{#if schedules}}
-<select id="schedule-select">
-    {{#each schedules}}
-    <option value="{{name}}">{{name}}</option>
-    {{/each}}
-</select>
+<form id="add-to-schedule" action="/course/{{_id}}" method="POST">
+    <select id="schedule-select" name="scheduleSelect">
+        {{#each schedules}}
+        {{#if selected}}
+        <option value="{{name}}" selected>{{name}}</option>
+        {{else}}
+        <option value="{{name}}">{{name}}</option>
+        {{/if}}
+        {{/each}}
+    </select><br><br>
+
+    <input id="submit-add-to-schedule" type="submit" value="Add to Schedule">
+
+</form>
 {{else}}
 <h3>No schedules found</h3>
 {{/if}}
 
 {{#each schedules}}
 <div class="potential-schedule" name="{{name}}" hidden>
-<h1>{{name}}</h1>
-{{#if conflicting}}
-<p class="warning">Warning: conflicting times</p>
-{{else}}
-<p>[Todo: put "Add To Schedule" button here]</p>
-{{/if}}
+    {{#if conflicting}}
+    <p class="warning">Warning: conflicting times</p>
+    {{/if}}
+    {{#if this.alreadyContains}}
+    <form class="already-added" id="remove-from-schedule" action="/course/remove" method="POST">
+        <input type="text" name="course" value="{{@root.course_section}}" hidden>
+        <input type="text" name="schedule" value="{{name}}" hidden>
+        <input type="submit" value="Remove From Schedule">
+    </form>
+    {{/if}}
+    <h1>{{name}}</h1>
 
-{{> schedule}}
+    {{> schedule}}
 
 </div>
 {{/each}}

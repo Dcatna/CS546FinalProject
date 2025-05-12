@@ -1,13 +1,13 @@
 import { faculty, courses } from "../config/mongoCollections.js";
 import { closeConnection } from "../config/mongoConnection.js";
-import facultyData from "./faculty.json" with {type: 'json'};   // with {type: 'json'} bc of error "'file/.../faculty.json' needs an import attribute of 'type: json'" and assert wont work either
+import facultyData from "./new_faculty.json" with {type: 'json'};   // with {type: 'json'} bc of error "'file/.../faculty.json' needs an import attribute of 'type: json'" and assert wont work either
 import coursesData from "./courses.json" with {type: 'json'};   // with {type: 'json'} bc of error "'file/.../faculty.json' needs an import attribute of 'type: json'" and assert wont work either
 
 
 const facultyCollection = await faculty();
 const coursesCollection = await courses();
-await facultyCollection.drop();
-await coursesCollection.drop();
+await facultyCollection.drop(); // reset
+await coursesCollection.drop(); // reset
 
 const faculty_seed = async (f_data) => {
     for (let i = 0; i < f_data.length; i++) {
@@ -17,6 +17,7 @@ const faculty_seed = async (f_data) => {
             title: member["Title"],
             office: member["Office"],
             email: member["Email"],
+            rating: 0,
             courses: [],
             comments: []
         }
