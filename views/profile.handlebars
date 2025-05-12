@@ -1,3 +1,4 @@
+<script src="/public/js/profileTabs.js"></script>
 <div class="profile-container">
   <div class="profile-header">
     <form id="profileImageForm" action="/profile/upload" method="POST" enctype="multipart/form-data">
@@ -48,16 +49,37 @@
 
 
   <div class="profile-tabs">
-    <button class="active">Schedules</button>
-    <button>Comments</button>
+  <button id="tab-schedules" class="active" onclick="showTab('schedules')">Schedules</button>
+  <button id="tab-comments" onclick="showTab('comments')">Comments</button>
   </div>
 
   <div class="profile-content">
-    <h3>Schedules:</h3>
-    <ul>
-      {{#each schedules}}
-        <li>{{this}}</li>
-      {{/each}}
-    </ul>
+    <div id="schedules-tab" class="tab-panel">
+      <h3>Schedules:</h3>
+      {{#if schedules.length}}
+        <ul>
+          {{#each schedules}}
+            <li>{{this.name}}</li>
+          {{/each}}
+        </ul>
+      {{else}}
+        <p>No Schedules Yet</p>
+      {{/if}}
+    </div>
+
+    <div id="comments-tab" class="tab-panel" style="display: none;">
+      <h3>Comments:</h3>
+      {{#if comments.length}}
+        {{#each comments}}
+          <div class="comment-box">
+            <h4 class="comment-title">{{this.title}}</h4>
+            <p class="comment-rating">Rating: {{this.rating}} / 5</p>
+            <p class="comment-content">{{this.content}}</p>
+          </div>
+        {{/each}}
+      {{else}}
+        <p>No Comments Yet</p>
+      {{/if}}
+    </div>
   </div>
 </div>

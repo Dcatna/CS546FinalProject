@@ -89,6 +89,7 @@ router.route("/profile/:userId").get(async (req, res) => {
           userId: user.userId,
           createdAt: user.createdAt,
           schedules: user.schedules,
+          comments: user.comments,
           isOwner: viewerId === user.userId,
           public: user.public
         })

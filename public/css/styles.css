@@ -37,6 +37,31 @@ body {
   text-align: right;
 }
 
+.comment-box {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  background-color: #f9f9f9;
+}
+
+.comment-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.comment-rating {
+  color: #555;
+  font-size: 0.95rem;
+  margin: 0.3rem 0;
+}
+
+.comment-content {
+  margin-top: 0.5rem;
+}
+
+
 /* DOMINIC */
 .form-container {
   background-color: white;
