@@ -1,5 +1,6 @@
 import { type } from "os";
 import bcrypt from 'bcrypt';
+import { ObjectId } from 'mongodb';
 import { courses, users } from "../config/mongoCollections.js";
 
 export async function register(userId, firstName, lastName, emailAddr, password) { //returns the valid user object
@@ -180,10 +181,10 @@ export const addSchedule = async (schedule, session) => {
   for (const userSchedule of session.user.schedules){
     if (userSchedule.name == schedule.name) throw 'Schedule with that name already exists';
   }
-
-  const res = await usersCollection.findOneAndUpdate({userId: session.user.userId}, {$push: {schedules: {name: schedule.name, courses: schedule.courses.map(cId => new ObjectId(cId))}}});
+  const scheduleId = new ObjectId();
+  const res = await usersCollection.findOneAndUpdate({userId: session.user.userId}, {$push: {schedules: {_id: scheduleId, name: schedule.name, courses: schedule.courses.map(cId => new ObjectId(cId))}}});
   if (!res) throw 'Error updating database';
-  session.user.schedules.push({name: schedule.name, courses: schedule.courses});
+  session.user.schedules.push({_id: scheduleId, name: schedule.name, courses: schedule.courses});
 }
 
 export const removeSchedule = async (name, session) => {
