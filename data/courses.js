@@ -2,6 +2,13 @@ import { courses, users } from "../config/mongoCollections.js";
 import { ObjectId } from "mongodb";
 import { Parser } from '@json2csv/plainjs';
 
+
+export const getAllCourses = async () => {
+  const coursesCollection = await courses()
+  const allCourses = await coursesCollection.find({}).toArray()
+  return allCourses
+}
+
 export const getCourseById = async (id) => {
     if (!id) throw `getCourseById(): No value for id`;
     if (typeof id !== 'string') throw  `getCourseById(): id is not of type \'string\'`;

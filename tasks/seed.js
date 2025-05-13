@@ -2,7 +2,16 @@ import { faculty, courses } from "../config/mongoCollections.js";
 import { closeConnection } from "../config/mongoConnection.js";
 import facultyData from "./new_faculty.json" with {type: 'json'};   // with {type: 'json'} bc of error "'file/.../faculty.json' needs an import attribute of 'type: json'" and assert wont work either
 import coursesData from "./courses.json" with {type: 'json'};   // with {type: 'json'} bc of error "'file/.../faculty.json' needs an import attribute of 'type: json'" and assert wont work either
+import {register, setProfilePicture } from "../data/users.js";
+import {createComment, addFacultyComment, addCourseSectionComment} from "../data/comments.js";
+import { getAllFaculty } from "../data/faculty.js";
+import { getAllCourses } from "../data/courses.js";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const facultyCollection = await faculty();
 const coursesCollection = await courses();
@@ -62,7 +71,38 @@ const courses_seed = async (c_data) => {
     }
 }
 
+const user_seed = async () => {
+    const user1 = await register("JohnB", "John", "Bern", "johnbern@gmail.com", "testerPass12!") //add some basic users
+    const user2 = await register("CharlieH", "Charlie", "Harper", "charlieharper@gmail.com", "SuperSecretPass12!")
+    const user3 = await register("OliviaJ", "Olivia", "Jaffe", "oliviajaffe@gmail.com", "Noclue42!!")
+    const user4 = await register("JakeF", "Jake", "Fullerton", "jakefullerton@gmail.com", "ILikeFarming32!")
+
+    //set some pfps ! only gonna do 2 of 4
+    const oliviaPfp = fs.readFileSync(path.join(__dirname, "seed_pfps/oliviapfp.jpg"))
+    const jakePfp = fs.readFileSync(path.join(__dirname, "seed_pfps/jakef.jpg"))
+
+    await setProfilePicture("OliviaJ", oliviaPfp, "image/jpeg")
+    await setProfilePicture("JakeF", jakePfp, "image/jpeg")
+
+    //add sum comments
+    const faculty = await getAllFaculty()
+    const courses = await getAllCourses()
+    const profId = faculty[0]._id.toString()
+    const courseId = courses[0]._id.toString()
+
+    const comment1 = await createComment("OliviaJ", "BEST PROF!!", "made concepts easy to understand and is always available!", 5)
+    await addFacultyComment(profId, comment1._id.toString())
+
+    const comment2 = await createComment("JakeF", "Solid Course FR", "Doesnt move too fast and assignments are interesting", 4)
+    await addCourseSectionComment(courseId, comment2._id.toString())
+
+}
+
 await faculty_seed(facultyData);
 await courses_seed(coursesData);
+await user_seed()
+
+
+
 
 await closeConnection();

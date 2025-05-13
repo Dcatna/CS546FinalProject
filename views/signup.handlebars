@@ -1,7 +1,10 @@
 
 <div class="form-container">
     <h2>Sign Up</h2>
-    <div id="error-signup" style="color: red;" hidden></div>
+    <div id="error-signup" style="color: red;" {{#unless errors}}hidden{{/unless}}>
+        {{#if errors}}{{errors}}{{/if}}
+    </div>
+
 
     <form action="/register" method="POST" class="signup-form" id="signup-form">
         <input type="text" name="username" placeholder="Username" id="userId">

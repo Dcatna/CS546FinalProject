@@ -65,7 +65,7 @@ router.route("/login").get(async (req, res) => {
     } catch (e) {
         console.log(e);
         return res.status(400).render("signin", {
-            error: e.message,
+            errors: e.message,
             session: req.session
         })
     }
