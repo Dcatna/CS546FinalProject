@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById, toggleUserPrivacyById, addSchedule, removeSchedule } from "../data/users.js";
-import { getCourseById, unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, conflicts, addToSchedule } from "../data/courses.js";
+import { getCourseById, unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, conflicts, addToSchedule, removeFromSchedule } from "../data/courses.js";
 import multer from 'multer';
 import { Readable } from 'stream';
 import csv from 'csv-parser';
+import { type } from "os";
 
 const storage = multer.memoryStorage()
 const upload = multer({ storage })
@@ -263,7 +264,7 @@ router.post("/schedules/upload", upload.single("scheduleCSV"), async (req, res) 
     }
 })
 
-router.route("/course/:courseId").get(async (req, res) => {
+router.route("/course/view/:courseId").get(async (req, res) => {
     if(!req.session || !req.session.user) {
         return res.redirect("/login");
     }
@@ -286,7 +287,8 @@ router.route("/course/:courseId").get(async (req, res) => {
     catch (e){
         res.status(400).render('error', {message: e, session: req.session});
     }
-}).post(async (req, res) => {
+})
+router.route("/course/add/:courseId").post(async (req, res) => {
     if(!req.session || !req.session.user) {
         return res.redirect("/login");
     }
@@ -301,12 +303,18 @@ router.route("/course/:courseId").get(async (req, res) => {
     }
 })
 
-router.route("/course/remove").post(async (req, res) => {
+router.route("/course/remove/:courseId").post(async (req, res) => {
     if(!req.session || !req.session.user) {
         return res.redirect("/login");
     }
 
-    return res.redirect("/schedules")
+    try {
+        await removeFromSchedule(req.body.scheduleSelect, req.params.courseId, req.session);
+        return res.redirect(`/course/view/${req.params.courseId}?schedule=${encodeURIComponent(req.body.scheduleSelect)}`);
+    }   
+    catch (e) {
+        res.status(400).render('error', {message: e, session: req.session});
+    } 
 })
 
 router.route("/schedules/delete/:name").post(async (req, res) => {

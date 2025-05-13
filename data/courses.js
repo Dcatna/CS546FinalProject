@@ -209,3 +209,25 @@ export const addToSchedule = async (scheduleName, courseId, session) => {
 
   session.user.schedules[scheduleIdx].courses.push(new ObjectId(courseId));
 }
+
+export const removeFromSchedule = async (scheduleName, courseId, session) => {
+  if (!session || !session.user) throw 'Invalid session';
+  if (typeof(scheduleName) != 'string') throw 'Invalid schedule name';
+
+  const usersCollection = await users();
+  const scheduleIdx = session.user.schedules.findIndex(schedule => schedule.name === scheduleName);
+  if (scheduleIdx == -1) throw 'No schedule with that name exists';
+  if (session.user.schedules[scheduleIdx].courses.indexOf(courseId) == -1) throw 'Schedule does not contain that course';
+
+  const res = await usersCollection.findOneAndUpdate({userId: session.user.userId}, {
+    $pull: {
+      "schedules.$[schedule].courses": new ObjectId(courseId)
+    }
+  }, {
+    arrayFilters: [{ "schedule.name": scheduleName }]
+  })
+  if (res.modifiedCount == 0) {
+    throw 'Unable to remove schedule with that name';
+  }
+  session.user.schedules[scheduleIdx].courses = session.user.schedules[scheduleIdx].courses.filter(cid => cid != courseId);
+}
