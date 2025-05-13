@@ -59,7 +59,7 @@
       {{#if schedules.length}}
         <ul>
           {{#each schedules}}
-            <li>{{this.name}}</li>
+            <a href="/view/{{this._id}}">{{this.name}}</a>
           {{/each}}
         </ul>
       {{else}}

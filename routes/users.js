@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById, toggleUserPrivacyById, addSchedule, removeSchedule } from "../data/users.js";
+import { ObjectId } from "mongodb";
+import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById, toggleUserPrivacyById, addSchedule, removeSchedule, getAllUsers } from "../data/users.js";
 import { getCourseById, unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, calendarExport, conflicts, addToSchedule, removeFromSchedule } from "../data/courses.js";
 import { getAllComments } from "../data/comments.js";
 import multer from 'multer';
@@ -177,6 +178,44 @@ router.route("/schedules").get(async (req, res) => {
         schedules: schedules
     });
 })
+
+router.route("/view/:scheduleId").get(async (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+
+    let scheduleId;
+    try {
+        scheduleId = new ObjectId(req.params.scheduleId);
+    } catch (e) {
+        return res.status(400).send("Invalid schedule ID");
+    }
+
+    const allUsers = await getAllUsers();
+
+    let found = null;
+
+    for(const user of allUsers){
+        const match = user.schedules.find(x => x._id && x._id.equals(scheduleId));
+        if(match){
+            found = match;
+            break;
+        }
+    }
+
+    if(!found){
+        return res.status(404).send("Schedule not found");
+    }
+    const [fullSchedule] = await unpackSchedules([found]);
+    fullSchedule.sections = getSectionTimes(fullSchedule);
+    fullSchedule.hasAsyncClass = fullSchedule.courses.some(x => !x.time);
+
+    res.render("schedule", {
+        session: req.session,
+        schedule: fullSchedule
+    });
+});
+
 router.get('/search', (req, res) => {
     if(!req.session || !req.session.user) {
         return res.redirect("/login")
