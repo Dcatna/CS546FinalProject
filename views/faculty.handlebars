@@ -32,6 +32,14 @@
         <p>{{content}}</p>
         <a href="/profile/{{userId}}">{{userId}}</a>
         <em>{{date}}</em>
+        {{#is_user userId ../curr_user}}
+        <form action="/faculty/member/{{id}}/comment/{{_id}}" method="POST">
+            <input type="hidden" name='_method' value="DELETE"/>
+            <button type="submit">
+                DELETE
+            </button>
+        </form>
+        {{/is_user}}
     </li>
     {{/each}}
 </ul>
