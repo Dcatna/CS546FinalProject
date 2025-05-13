@@ -62,12 +62,12 @@ const new_date = (time) => {
 }
 
 export const getCommentById = async (commentId) => {
-    commentId = id_checker(commentId, 'commentId', 'getCommentById()');
+    //commentId = id_checker(commentId, 'commentId', 'getCommentById()');
 
     const commentCollection = await comments();
-    let comment = commentCollection.findOne({_id: new ObjectId(commentId)});
+    let comment = commentCollection.findOne({_id: new ObjectId(commentId.toString())});
 
-    if (!comment) throw `getCommentById(): Comment not found`;
+    if (!comment) throw new Error(`getCommentById(): Comment not found`);
     return comment;
 }
 
@@ -181,14 +181,22 @@ export const deleteFacultyComment = async (f_id, commentId) => {
     let new_fm_comments_len = faculty_member.comments.length - 1 === 0 ? 1 : faculty_member.comments.length - 1;
     let new_rating = 0;
     let new_comments = [];
-    faculty_member.comments.map(async (c_id) => {
-        if (c_id !== commentId) {
-            console.log(c_id, typeof c_id)
-            let comment = await getCommentById(c_id.toString());
-            new_rating += comment.rating;
-            new_comments.push(c_id);
+
+
+    for (const comment of faculty_member.comments) {
+         if (comment._id !== commentId && comment._id) {
+            console.log(comment._id, typeof comment._id)
+            
+            let com = await getCommentById(comment._id);
+            if (com) {
+                console.log(com)
+                new_rating += com.rating;
+                new_comments.push(com._id);
+            }
+
         }
-    })
+    }
+    
     new_rating /= new_fm_comments_len;
 
     const upd_faculty_member = await facultyCollection.findOneAndUpdate(
@@ -197,12 +205,12 @@ export const deleteFacultyComment = async (f_id, commentId) => {
         {returnDocument: 'after'}
     );
 
-    if (!upd_faculty_member) throw `deleteFacultyComment(): Could not delete comment from faculty member`;
+    if (!upd_faculty_member) throw new Error(`deleteFacultyComment(): Could not delete comment from faculty member`);
 
     const deleted_comment_info = await commentCollection.findOneAndDelete(
         {_id: new ObjectId(commentId)}
     );
-    if (!deleted_comment_info) throw `deleteFacultyComment(): Could not delete comment with id ${commentId}`;
+    if (!deleted_comment_info) throw new Error(`deleteFacultyComment(): Could not delete comment with id ${commentId}`);
 
     return deleted_comment_info;
 
