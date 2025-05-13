@@ -138,6 +138,91 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         })
     }
+
+    const comment = document.getElementById('comment-form');
+    if (comment) {
+        const err = document.getElementById("error-comment")
+        comment.addEventListener("submit", (event) => {
+            if (err) err.hidden = true;
+
+            let title = document.getElementById('comment_title').value;
+            let content = document.getElementById('comment_content').value;
+            let rating = document.getElementById('comment_rating').value;
+
+            if (!title) {
+                event.preventDefault();
+                err.textContent = `Error: No value for title field`;
+                err.hidden = false;
+                return;
+            }
+            if (typeof title !== 'string') {
+                event.preventDefault();
+                err.textContent = `Error: title is not of type \'string\'`;
+                err.hidden = false;
+                return;
+            } 
+            title = title.trim();
+            if (title.length === 0) {
+                event.preventDefault();
+                err.textContent = `Error: title cannot consist of just spaces`;
+                err.hidden = false;
+                return;
+            } 
+
+            if (!content) {
+                event.preventDefault();
+                err.textContent = `Error: No value for content field`;
+                err.hidden = false;
+                return;
+            }
+            if (typeof content !== 'string') {
+                event.preventDefault();
+                err.textContent = `Error: content is not of type \'string\'`;
+                err.hidden = false;
+                return;
+            } 
+            content = content.trim();
+            if (content.length === 0) {
+                event.preventDefault();
+                err.textContent = `Error: content cannot consist of just spaces`;
+                err.hidden = false;
+                return;
+            } 
+            
+            if (!rating) {
+                event.preventDefault();
+                err.textrating = `Error: No value for rating field`;
+                err.hidden = false;
+                return;
+            }
+            if (typeof rating !== 'string') {
+                event.preventDefault();
+                err.textrating = `Error: rating is not of type \'string\'`;
+                err.hidden = false;
+                return;
+            } 
+            rating = rating.trim();
+            if (rating.length === 0) {
+                event.preventDefault();
+                err.textContent = `Error: rating cannot consist of just spaces`;
+                err.hidden = false;
+                return;
+            } 
+            if (isNaN(parseFloat(rating))) {
+                event.preventDefault();
+                err.textContent = `Error: rating must be a number`;
+                err.hidden = false;
+                return;
+            }
+            if (rating < 0 || rating > 5) {
+                event.preventDefault();
+                err.textContent = `Error: rating cannot be less than 0 or greater than 5`;
+                err.hidden = false;
+                return;
+            }
+            
+        })
+    }
 })
 const confirmDeletion = (event) => {
     const confirmed = confirm("Are you sure you want to delete this schedule?");

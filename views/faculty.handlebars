@@ -1,0 +1,42 @@
+<h1>{{name}}</h1>
+{{#if faculty_title}}
+<em>{{faculty_title}}</em><br>
+{{/if}}
+{{#if office}}
+<em>{{office}}</em>
+{{/if}}
+
+<h2>Rating: {{rating}}
+{{#if courses}}
+<h2>Course Sections:</h2>
+<ul>
+    {{#each courses}}
+    <li class="course-item">
+        <strong><a href="/course/{{_id}}">{{course_section}}</a></strong><br>
+        {{#if time}}
+        <em>Time: </em>{{time}}<br>
+        {{/if}}
+        {{#if days}}
+        <em>Days: </em>{{days}}<br>
+        {{/if}}
+    </li>
+    {{/each}}
+</ul>
+{{/if}}
+{{#if comments}}
+<h2>Comments:</h2>
+<ul>
+    {{#each comments}}
+    <li>
+        <h3>{{title}}</h3>
+        <p>{{content}}</p>
+        <a href="/profile/{{userId}}">{{userId}}</a>
+        <em>{{date}}</em>
+    </li>
+    {{/each}}
+</ul>
+{{/if}}
+
+<form action="/faculty/member/{{id}}/comment" method="GET" id="faculty-comment">
+    <input type="submit" value="Comment">
+</form>

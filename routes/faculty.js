@@ -2,6 +2,7 @@ import { Router } from "express";
 import { ObjectId } from "mongodb";
 import * as faculty from "../data/faculty.js";
 import * as comments from "../data/comments.js";
+import * as courses from "../data/courses.js";
 
 const str_checker = (str, str_name, func_sig) => {
     if (!str) throw `${func_sig}: No value for ${str_name}`;
@@ -23,8 +24,9 @@ const title_checker = (title, title_name, func_sig) => {
     return title;
 }
 const num_checker = (num, num_name, func_sig) => {
-    if (typeof num !== 'number') throw `${func_sig}: ${num_name} is not of type \'number\'`;
+    if (isNaN(parseFloat(num))) throw `${func_sig}: ${num_name} is not of type \'number\'`;
     if (isNaN(num)) throw `${func_sig}: ${num_name} is of type \'NaN\'`;
+    return parseFloat(num);
 }
 
 const router = Router();
@@ -61,6 +63,9 @@ router.route("/name/:name").get(async (req, res) => {
 })
 
 router.route("/member/:facultyId").get(async (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
     let faculty_member, id;
     try {
         id = id_checker(req.params.facultyId, 'id', `GET /faculty/member/${req.params.facultyId}`);
@@ -69,43 +74,83 @@ router.route("/member/:facultyId").get(async (req, res) => {
     }
     try {
         faculty_member = await faculty.getFacultyById(id);
-        return res.json({faculty_member});
+        let faculty_courses = [];
+        let faculty_comments = [];
+        for (let i = 0; i < faculty_member.courses.length; i++) {
+            let course = await courses.getCourseById(faculty_member.courses[i].toString());
+            faculty_courses.push(course);
+        }
+        for (let i = 0; i < faculty_member.comments.length; i++) {
+            let Comment = await comments.getCommentById(faculty_member.comments[i].toString());
+            faculty_comments.push(Comment);
+        }
+        res.render('faculty', {
+            session: req.session,
+            title: faculty_member.name, 
+            id: faculty_member._id.toString(),
+            name: faculty_member.name, 
+            faculty_title: faculty_member.title,
+            office: faculty_member.office,
+            rating: faculty_member.rating,
+            courses: faculty_courses,
+            comments: faculty_comments
+        })
     } catch (e) {
-        return res.status(500).json({error: e});
+        res.status(500).render('error', {message: e, session: req.session});
+    }
+})
+
+router.route("/member/:facultyId/comment").get(async (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+    let faculty_member, id;
+    try {
+        id = id_checker(req.params.facultyId, 'id', `GET /faculty/member/${req.params.facultyId}`);
+    } catch (e) {
+        res.status(404).render('error', {message: e, session: req.session});
+    }
+    try {
+        faculty_member = await faculty.getFacultyById(id);
+        res.render('comment', {session: req.session, title: `Comment: ${faculty_member.name}`, faculty_id: id.toString()});
+    } catch (e) {
+        res.status(500).render('error', {message: e, session: req.session});
     }
 }).post(async (req, res) => {
-    let userId, title, content, rating, f_id, faculty_member, comment, upd_faculty_member;
-    let func_sig = `POST /faculty/member/${req.params.facultyId}`;
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+    let userId, title, content, rating, f_id, faculty_member, upd_faculty_member;
+    let func_sig = `POST /faculty/member/${req.params.facultyId}/comment`;
     try {
         if (!req.body || Object.keys(req.body).length === 0) throw `${func_sig}: request body cannot be empty`;
         const keys = Object.keys(req.body);
-        if (keys.length > 4) throw `${func_sig}: request body cannot have more than 4 fields`;
-        keys.map((key) => {if ((key !== `userId`) && (key !== `title`) && (key !== `content`) && (key !== `rating`)) throw `${func_sig}: \'${key}\' is an invalid key`});
+        if (keys.length > 3) throw `${func_sig}: request body cannot have more than 4 fields`;
+        keys.map((key) => {if ((key !== `title`) && (key !== `content`) && (key !== `rating`)) throw `${func_sig}: \'${key}\' is an invalid key`});
         
-        userId = id_checker(req.body.userId, 'userId', func_sig);
+        // id = id_checker(req.session.id, '_id', func_sig);
+        userId = str_checker(req.session.user.userId, 'userId', func_sig);
         title = title_checker(req.body.title, 'title', func_sig);
         content = str_checker(req.body.content, 'content', func_sig);
 
-        num_checker(req.body.rating, 'rating', func_sig);
-        rating = req.body.rating;
-        if (rating < 1 || rating > 5) throw `${func_sig}: rating cannot be less than 1 or greater than 5`;
+        rating = num_checker(req.body.rating, 'rating', func_sig);
+        if (rating < 0 || rating > 5) throw `${func_sig}: rating cannot be less than 0 or greater than 5`;
 
-        f_id = id_checker(req.params.facultyId, 'id', func_sig);
+        f_id = id_checker(req.params.facultyId, 'f_id', func_sig);
         try {
             faculty_member = await faculty.getFacultyById(f_id);
         } catch (e) {
             throw `${func_sig}: faculty with the id of ${req.params.facultyId} does not exist`;
         }
     } catch (e) {
-        return res.status(404).json({error: e});
+        res.status(404).render('error', {message: e, session: req.session});
     }
 
     try {
-        comment = await comments.createComment(userId, title, content, rating);
-        upd_faculty_member = await comments.addFacultyComment(f_id, comment._id.toString());
-        return res.redirect(`/faculty/member/${f_id}/${comment._id.toString()}`);
+        upd_faculty_member = await comments.addFacultyComment(f_id, userId, title, content, rating);
+        res.redirect(`/faculty/member/${f_id}`);
     } catch (e) {
-        return res.status(500).json({error: e})
+        res.status(500).render('error', {message: e, session: req.session});
     }
     
 });

@@ -77,7 +77,7 @@ export const getAllComments = async () => {
     return all_comments;
 }
  
-export const createComment = async (userId, title, content, rating) => {
+export const createComment = async (userId, title, content, rating, ref_id) => {
     userId = str_checker(userId, 'userId', 'createComment()');
     title = title_checker(title, 'title', 'createComment()');
     content = str_checker(content, 'content', 'createComment()');
@@ -89,7 +89,8 @@ export const createComment = async (userId, title, content, rating) => {
         title: title,
         content: content,
         rating: rating,
-        date: new_date(true)
+        date: new_date(true),
+        for: ""
     };
     const commentCollection = await comments();
     const insert_info = await commentCollection.insertOne(new_comment);
@@ -111,16 +112,38 @@ export const deleteComment = async (commentId) => {
 }
 
 // Faculty Comments
-export const addFacultyComment = async (f_id, commentId) => {
+export const addFacultyComment = async (f_id, userId, title, content, rating) => {
     f_id = id_checker(f_id, 'f_id', 'addFacultyComment()');
-    commentId = id_checker(commentId, 'commentId', 'addFacultyComment()');
+    // commentId = id_checker(commentId, 'commentId', 'addFacultyComment()');
+    // user_id = id_checker(user_id, 'user_id', 'addFacultyComment()')
+    userId = str_checker(userId, 'userId', 'addFacultyComment()');
+    title = title_checker(title, 'title', 'addFacultyComment()');
+    content = str_checker(content, 'content', 'addFacultyComment()');
+    num_checker(rating, 'rating', 'addFacultyComment()');
+    if (rating < 0 || rating > 5) throw `addFacultyComment(): rating cannot be less than 0 or greater than 5`;
 
+    let new_comment = {
+        // user_id: new Object(user_id),
+        userId: userId,
+        title: title,
+        content: content,
+        rating: rating,
+        date: new_date(true),
+        for: new ObjectId(f_id)
+    };
+
+    const commentCollection = await comments();
+    const insert_info = await commentCollection.insertOne(new_comment);
+    if (!insert_info.acknowledged || !insert_info.insertedId) throw `addFacultyComment(): Could not add comment`;
+    const inserted_comment = await getCommentById(insert_info.insertedId.toString())
+
+    let commentId = inserted_comment._id;
     const facultyCollection = await faculty();
     let faculty_member = await faculty_data.getFacultyById(f_id);
     if (faculty_member.comments.includes(commentId)) throw `addFacultyComment(): commentId already exists in faculty member's comments`;
     let new_fm_comments_len = faculty_member.comments.length + 1;
     let new_rating = 0;
-    faculty_member.comments.push(commentId)
+    faculty_member.comments.push(commentId.toString())
     for (let i = 0; i < new_fm_comments_len; i++) {
         let c_id = faculty_member.comments[i];
         let comment = await getCommentById(c_id);
