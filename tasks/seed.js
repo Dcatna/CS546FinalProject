@@ -90,9 +90,13 @@ const user_seed = async () => {
     const profId = faculty[0]._id.toString()
     const courseId = courses[0]._id.toString()
 
+    // Perhaps change register to return the user object? Or smth like {registrationCompleted: true, user: user} or whatever
+    // I changed addFacultyComment() to do the creation and addition in the same function as opposed to separately
+    // const comment1 = await addFacultyComment(profId, user3.userId, "BEST PROF!!", "made concepts easy to understand and is always available!", 5)
     const comment1 = await createComment("OliviaJ", "BEST PROF!!", "made concepts easy to understand and is always available!", 5)
     await addFacultyComment(profId, comment1._id.toString())
 
+    // will change addCourseSectionComment() similarly
     const comment2 = await createComment("JakeF", "Solid Course FR", "Doesnt move too fast and assignments are interesting", 4)
     await addCourseSectionComment(courseId, comment2._id.toString())
 
