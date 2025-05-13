@@ -159,7 +159,7 @@ router.route("/member/:facultyId/comment").get(async (req, res) => {
     
 });
 
-router.route("/member/:facultyId/:commentId").get(async (req, res) => {
+router.route("/member/:facultyId/comment/:commentId").get(async (req, res) => {
     let f_id, c_id, comment;
     let func_sig = `GET /faculty/member/${req.params.facultyId}/${req.params.commentId}`
     try {
@@ -170,13 +170,18 @@ router.route("/member/:facultyId/:commentId").get(async (req, res) => {
     }
     try {
         comment = await comments.getCommentById(c_id);
+        console.log("COMMENTS")
         return res.json(comment);
     } catch (e) {
         return res.status(500).json({error: e});
     }
-}).delete(async (req, res) => {
+})
+
+http://localhost:3000/faculty/member/682387c6b6ea5f0f9f1329d9/comment/68238f2739c46af162f73fab/delete
+router.route("/member/:facultyId/comment/:commentId/delete").post(async (req, res) => {
+    console.log("HELLOOOOO")
     let f_id, c_id;
-    let func_sig = `DELETE /faculty/member/${req.params.facultyId}/${req.params.commentId}`
+    let func_sig = `POST /faculty/member/${req.params.facultyId}/comment/${req.params.commentId}/delete`
     try {
         f_id = id_checker(req.params.facultyId, 'facultyId', func_sig);
         c_id = id_checker(req.params.commentId, 'commentId', func_sig);
@@ -186,7 +191,8 @@ router.route("/member/:facultyId/:commentId").get(async (req, res) => {
 
     try {
         let deletedComment = await comments.deleteFacultyComment(f_id, c_id);
-        return res.json(deletedComment);
+        console.log("DFELTE")
+        return res.redirect(req.originalUrl)
     } catch (e) {
         return res.status(500).json({error: e});
     }

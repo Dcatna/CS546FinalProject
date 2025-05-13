@@ -181,9 +181,10 @@ export const deleteFacultyComment = async (f_id, commentId) => {
     let new_fm_comments_len = faculty_member.comments.length - 1 === 0 ? 1 : faculty_member.comments.length - 1;
     let new_rating = 0;
     let new_comments = [];
-    faculty_member.comments.map((c_id) => {
+    faculty_member.comments.map(async (c_id) => {
         if (c_id !== commentId) {
-            let comment = getCommentById(c_id);
+            console.log(c_id, typeof c_id)
+            let comment = await getCommentById(c_id.toString());
             new_rating += comment.rating;
             new_comments.push(c_id);
         }

@@ -37,13 +37,12 @@
         <em>{{date}}</em>
 
         {{#is_user userId ../curr_user}}
-
-        <form action="/faculty/member/{{@root.id}}/comment/{{comment._id}}" method="POST">
-            <input type="hidden" name='_method' value="DELETE"/>
+            <form action="/faculty/member/{{@root.id}}/comment/{{comment._id}}/delete" method="POST">
             <button type="submit">
                 DELETE
             </button>
-        </form>
+            </form>
+
         {{/is_user}}
     </li>
     {{/each}}
