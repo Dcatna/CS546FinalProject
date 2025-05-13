@@ -166,6 +166,17 @@ export async function toggleUserPrivacyById(userId, isPublic) {
 
 }
 
+export async function getAllUsers() {
+  const userCollection = await users();
+  const allUsers = await userCollection.find({}).toArray();
+
+  if (!allUsers || allUsers.length === 0) {
+    throw new Error("No users found");
+  }
+
+  return allUsers;
+}
+
 export const addSchedule = async (schedule, session) => {
   const coursesCollection = await courses();
   const usersCollection = await users();
