@@ -111,6 +111,7 @@ export const deleteComment = async (commentId) => {
     return delete_info;
 }
 
+
 // Faculty Comments
 export const addFacultyComment = async (f_id, userId, title, content, rating) => {
     f_id = id_checker(f_id, 'f_id', 'addFacultyComment()');
@@ -170,12 +171,19 @@ export const addFacultyComment = async (f_id, userId, title, content, rating) =>
     return upd_faculty_member;
 }
 
-export const deleteFacultyComment = async (f_id, commentId) => {
+export const deleteFacultyComment = async (f_id, commentId, userId) => {
     f_id = id_checker(f_id, 'f_id', 'deleteFacultyComment()');
     commentId = id_checker(commentId, 'commentId', 'deleteFacultyComment()');
 
     const commentCollection = await comments();
     const facultyCollection = await faculty();
+    const usersCollection =  await users()
+
+    const validation = await getCommentById(commentId) //have to make sure the person deleting is the user of the comment...
+    if (validation.userId !== userId) {
+        return 
+    }
+
     let faculty_member = await faculty_data.getFacultyById(f_id);
 
     let new_fm_comments_len = faculty_member.comments.length - 1 === 0 ? 1 : faculty_member.comments.length - 1;
@@ -184,9 +192,7 @@ export const deleteFacultyComment = async (f_id, commentId) => {
 
 
     for (const comment of faculty_member.comments) {
-         if (comment._id !== commentId && comment._id) {
-            console.log(comment._id, typeof comment._id)
-            
+         if (comment._id !== commentId && comment._id) {            
             let com = await getCommentById(comment._id);
             if (com) {
                 console.log(com)
@@ -211,6 +217,17 @@ export const deleteFacultyComment = async (f_id, commentId) => {
         {_id: new ObjectId(commentId)}
     );
     if (!deleted_comment_info) throw new Error(`deleteFacultyComment(): Could not delete comment with id ${commentId}`);
+
+    const user_delete_comment_info = await await usersCollection.updateOne(
+        { userId: userId },
+        {
+            $pull: {
+                comments: new ObjectId(commentId)
+            }
+        }
+    );
+
+    if (!user_delete_comment_info) throw new Error(`deleteFacultyComment(): Could not delete comment with id ${commentId}`);
 
     return deleted_comment_info;
 

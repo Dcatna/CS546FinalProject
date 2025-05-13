@@ -180,6 +180,11 @@ router.route("/member/:facultyId/comment/:commentId").get(async (req, res) => {
 router.route("/member/:facultyId/comment/:commentId/delete").post(async (req, res) => {
     console.log("HELLOOOOO")
     let f_id, c_id;
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+    const userId = req.session.user.userId
+
     let func_sig = `POST /faculty/member/${req.params.facultyId}/comment/${req.params.commentId}/delete`
     try {
         f_id = id_checker(req.params.facultyId, 'facultyId', func_sig);
@@ -189,9 +194,9 @@ router.route("/member/:facultyId/comment/:commentId/delete").post(async (req, re
     }
 
     try {
-        let deletedComment = await comments.deleteFacultyComment(f_id, c_id);
+        let deletedComment = await comments.deleteFacultyComment(f_id, c_id, userId);
         console.log("DFELTE")
-        return res.redirect("back")
+        return res.redirect(req.get("Referrer") || "/")
     } catch (e) {
         return res.status(500).json({error: e.message});
     }
