@@ -163,8 +163,9 @@ router.route("/schedules").get(async (req, res) => {
 
     let schedules = await unpackSchedules(req.session.user.schedules);
     schedules = schedules.map(schedule => ({
-        name: schedule.name,
-        sections: getSectionTimes(schedule)
+        ...schedule,
+        sections: getSectionTimes(schedule),
+        hasAsyncClass: schedule.courses.some(course => !course.time)
     }));
 
     res.render("schedules", {

@@ -31,6 +31,16 @@
     <input type="submit" name="Delete Schedule" value="Delete Schedule">
 </form>
 {{> schedule}}
+{{#if hasAsyncClass}}
+<p>Sections without scheduled times:</p>
+<ul>
+  {{#each courses}}
+  {{#unless time}}
+  <li>{{course_section}}</li>
+  {{/unless}}
+  {{/each}}
+</ul>
+{{/if}}
 {{/each}}
 
 {{#unless schedules}}

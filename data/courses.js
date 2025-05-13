@@ -138,7 +138,7 @@ export const getSectionTimes = (schedule) => {
       const color = colors[hashStringToColorIndex(course.course)];
     for (const day of course.days.split("/")){
       sections.push({
-        name: course.course,
+        name: course.course_section,
         time: course.time,
         startTime: startTime,
         duration: duration,
