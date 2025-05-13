@@ -177,7 +177,6 @@ router.route("/member/:facultyId/comment/:commentId").get(async (req, res) => {
     }
 })
 
-http://localhost:3000/faculty/member/682387c6b6ea5f0f9f1329d9/comment/68238f2739c46af162f73fab/delete
 router.route("/member/:facultyId/comment/:commentId/delete").post(async (req, res) => {
     console.log("HELLOOOOO")
     let f_id, c_id;
@@ -192,9 +191,9 @@ router.route("/member/:facultyId/comment/:commentId/delete").post(async (req, re
     try {
         let deletedComment = await comments.deleteFacultyComment(f_id, c_id);
         console.log("DFELTE")
-        return res.redirect(req.originalUrl)
+        return res.redirect("back")
     } catch (e) {
-        return res.status(500).json({error: e});
+        return res.status(500).json({error: e.message});
     }
 })
 
