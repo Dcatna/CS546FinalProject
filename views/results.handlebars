@@ -5,7 +5,7 @@
       {{#each courses}}
         <li class="course-item">
           <strong><a href="/course/view/{{_id}}">{{course_section}}</a></strong><br>
-          <em>Professor:</em> {{instructor}}<br>
+          <em>Professor: </em>{{#if instructor_id}}<a href="/faculty/member/{{instructor_id}}">{{instructor}}</a>{{else}}{{instructor}}{{/if}}<br>
           <em>Time:</em> {{time}} <br>
           <em>Days:</em> {{days}}<br>
         </li>

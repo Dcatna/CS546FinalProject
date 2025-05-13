@@ -129,7 +129,8 @@ export const addFacultyComment = async (f_id, userId, title, content, rating) =>
         content: content,
         rating: rating,
         date: new_date(true),
-        for: new ObjectId(f_id)
+        for_id: new ObjectId(f_id),
+        for: "faculty"
     };
 
     const commentCollection = await comments();
@@ -154,9 +155,17 @@ export const addFacultyComment = async (f_id, userId, title, content, rating) =>
         {_id: new ObjectId(f_id)}, 
         {$push: {"comments": commentId}, $set: {"rating": new_rating}}, 
         {returnDocument: 'after'}
-    );
-
+    );  
     if (!upd_faculty_member) throw `addFacultyComment(): Could not add comment to faculty member`;
+    
+    const userCollection = await users();
+    let user = await userCollection.findOneAndUpdate(
+        {userId: userId},
+        {$push: {"comments": commentId}},
+        {returnDocument: 'after'}
+    );
+    if (!user) throw `addFacultyComment(): Could not add comment to user`;
+
 
     return upd_faculty_member;
 }

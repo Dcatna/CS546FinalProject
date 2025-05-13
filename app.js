@@ -18,6 +18,13 @@ Handlebars.registerHelper("isLoggedIn", function(session){
   return session && session.user;
 });
 
+Handlebars.registerHelper("is_user", (userId, curr_user, options) => {
+  if (userId === curr_user) {
+    return options.fn(this);
+  }
+  
+});
+
 app.use(
   session({
     secret: "This is a secret.. shhh don't tell anyone",
@@ -25,6 +32,22 @@ app.use(
     resave: false
   })
 );
+
+// from lecture code to support deletion of comments
+const rewriteUnsupportedBrowserMethods = (req, res, next) => {
+  // If the user posts to the server with a property called _method, rewrite the request's method
+  // To be that method; so if they post _method=PUT you can now allow browsers to POST to a route that gets
+  // rewritten in this middleware to a PUT route
+  if (req.body && req.body._method) {
+    req.method = req.body._method;
+    delete req.body._method;
+  }
+
+  // let the next middleware run:
+  next();
+};
+app.use(rewriteUnsupportedBrowserMethods);
+
 constructorMethod(app)
 
 app.listen(3000, () => {

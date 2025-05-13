@@ -1,22 +1,26 @@
-import { faculty, courses } from "../config/mongoCollections.js";
+import { faculty, courses, users } from "../config/mongoCollections.js";
 import { closeConnection } from "../config/mongoConnection.js";
 import facultyData from "./new_faculty.json" with {type: 'json'};   // with {type: 'json'} bc of error "'file/.../faculty.json' needs an import attribute of 'type: json'" and assert wont work either
 import coursesData from "./courses.json" with {type: 'json'};   // with {type: 'json'} bc of error "'file/.../faculty.json' needs an import attribute of 'type: json'" and assert wont work either
 import {register, setProfilePicture } from "../data/users.js";
-import {createComment, addFacultyComment, addCourseSectionComment} from "../data/comments.js";
+import {createComment, addFacultyComment, addCourseSectionComment, getCommentById} from "../data/comments.js";
 import { getAllFaculty } from "../data/faculty.js";
-import { getAllCourses } from "../data/courses.js";
+import { getAllCourses, getCourseById } from "../data/courses.js";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { ObjectId } from "mongodb";
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const facultyCollection = await faculty();
 const coursesCollection = await courses();
+const usersCollection = await users();
 await facultyCollection.drop(); // reset
 await coursesCollection.drop(); // reset
+await usersCollection.drop(); // reset
+
 
 const faculty_seed = async (f_data) => {
     for (let i = 0; i < f_data.length; i++) {
@@ -42,6 +46,7 @@ const faculty_seed = async (f_data) => {
 
 const courses_seed = async (c_data) => {
     for (let i = 0; i < c_data.length; i++) {
+        let updated_faculty;
         let course = c_data[i];
         let insert_info;
         let intermediate_course = {
@@ -49,6 +54,7 @@ const courses_seed = async (c_data) => {
             course: course["Course"],
             status: course["Open"],
             instructor: course["Instructor"],
+            instructor_id: "",
             location: course["Location"],
             days: course["Days"],
             time: course["Time"],
@@ -64,7 +70,21 @@ const courses_seed = async (c_data) => {
         }
     
         try {
-            const updated_faculty = await facultyCollection.findOneAndUpdate({"name": intermediate_course.instructor}, {$push: {"courses": insert_info.insertedId}});
+            updated_faculty = await facultyCollection.findOneAndUpdate(
+                {"name": intermediate_course.instructor}, 
+                {$push: {"courses": insert_info.insertedId}},
+                {returnDocument: 'after'}
+            );
+        } catch (e) {
+            console.log(e);
+        }
+
+        try {
+            let inserted_course = await getCourseById(insert_info.insertedId.toString());
+            if (updated_faculty && updated_faculty.name === inserted_course.instructor) {
+                let f_id = updated_faculty._id.toString();
+                let upd_course= await coursesCollection.findOneAndUpdate({_id: insert_info.insertedId}, {$set: {"instructor_id": f_id}});
+            }
         } catch (e) {
             console.log(e);
         }
@@ -92,9 +112,9 @@ const user_seed = async () => {
 
     // Perhaps change register to return the user object? Or smth like {registrationCompleted: true, user: user} or whatever
     // I changed addFacultyComment() to do the creation and addition in the same function as opposed to separately
-    // const comment1 = await addFacultyComment(profId, user3.userId, "BEST PROF!!", "made concepts easy to understand and is always available!", 5)
-    const comment1 = await createComment("OliviaJ", "BEST PROF!!", "made concepts easy to understand and is always available!", 5)
-    await addFacultyComment(profId, comment1._id.toString())
+    const comment1 = await addFacultyComment(profId, "OliviaJ", "BEST PROF!!", "made concepts easy to understand and is always available!", 5)
+    // const comment1 = await createComment("OliviaJ", "BEST PROF!!", "made concepts easy to understand and is always available!", 5)
+    // await addFacultyComment(profId, comment1._id.toString())
 
     // will change addCourseSectionComment() similarly
     const comment2 = await createComment("JakeF", "Solid Course FR", "Doesnt move too fast and assignments are interesting", 4)

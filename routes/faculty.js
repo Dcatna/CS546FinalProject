@@ -93,7 +93,8 @@ router.route("/member/:facultyId").get(async (req, res) => {
             office: faculty_member.office,
             rating: faculty_member.rating,
             courses: faculty_courses,
-            comments: faculty_comments
+            comments: faculty_comments,
+            curr_user: req.session.user.userId
         })
     } catch (e) {
         res.status(500).render('error', {message: e, session: req.session});
