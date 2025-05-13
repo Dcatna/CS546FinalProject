@@ -104,13 +104,20 @@ const parseTimeRange = (rangeStr) => {
 //schedules are stored in DB as arrays of course ObjectIds, so here we load all of the courses from the database for each of the user's schedules
 export const unpackSchedules = async (schedules) => {
   const out = []
-  for (const schedule of schedules){
+
+  for(const sched of schedules) {
+    let coursess = []
+    for(const courseId of sched.courses) {
+      const course = await getCourseById(courseId.toString())
+      coursess.push(course)
+
+    }
     out.push({
-      name: schedule.name,
-      courses: await Promise.all(schedule.courses.map(async courseId => await getCourseById(courseId)))
+      name: sched.name,
+      courses: coursess
     })
-    
-  }
+  };
+  
   return out;
 }
 

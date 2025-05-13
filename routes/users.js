@@ -172,7 +172,7 @@ router.route("/schedules").get(async (req, res) => {
         sections: getSectionTimes(schedule),
         hasAsyncClass: schedule.courses.some(course => !course.time)
     }));
-
+    console.log(schedules, "SDFSFDDFSDF")
     res.render("schedules", {
         session: req.session,
         schedules: schedules
@@ -206,14 +206,23 @@ router.route("/view/:scheduleId").get(async (req, res) => {
     if(!found){
         return res.status(404).send("Schedule not found");
     }
-    const [fullSchedule] = await unpackSchedules([found]);
-    fullSchedule.sections = getSectionTimes(fullSchedule);
-    fullSchedule.hasAsyncClass = fullSchedule.courses.some(x => !x.time);
+    try {
+        const [schedule] = await unpackSchedules([found]);
+        const fullSchedule = {
+            ...schedule,
+            sections: getSectionTimes(schedule),
+            hasAsyncClass: schedule.courses.some(course => !course.time)
+        };
 
-    res.render("schedule", {
-        session: req.session,
-        schedule: fullSchedule
-    });
+        res.render("schedule", {
+            session: req.session,
+            schedules: [fullSchedule]
+        });
+    } catch (e) {
+        console.log(e.message, "SD")
+        res.status(500).redirect(req.get("Referer") || "/")
+    }
+
 });
 
 router.get('/search', (req, res) => {
