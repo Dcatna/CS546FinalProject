@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById, toggleUserPrivacyById, addSchedule, removeSchedule } from "../data/users.js";
 import { getCourseById, unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, calendarExport, conflicts, addToSchedule, removeFromSchedule } from "../data/courses.js";
+import { getAllComments } from "../data/comments.js";
 import multer from 'multer';
 import { Readable } from 'stream';
 import csv from 'csv-parser';
@@ -83,9 +84,9 @@ router.route("/profile/:userId").get(async (req, res) => {
           const referer = req.get("Referer") || "/"
           return res.redirect(referer)
         }      
+        let allComments = await getAllComments();
+        let comments = allComments.filter(comment => comment.userId === user.userId);
 
-        console.log(user.comments)
-        
         res.render("profile", {
           session: req.session,
           firstName: user.firstName,
@@ -93,7 +94,7 @@ router.route("/profile/:userId").get(async (req, res) => {
           userId: user.userId,
           createdAt: user.createdAt,
           schedules: user.schedules,
-          comments: user.comments,
+          comments: comments,
           isOwner: viewerId === user.userId,
           public: user.public
         })
