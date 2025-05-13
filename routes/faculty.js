@@ -69,6 +69,7 @@ router.route("/member/:facultyId").get(async (req, res) => {
     let faculty_member, id;
     try {
         id = id_checker(req.params.facultyId, 'id', `GET /faculty/member/${req.params.facultyId}`);
+        console.log("ID", id)
     } catch (e) {
         return res.status(404).json({error: e});
     }
@@ -82,8 +83,10 @@ router.route("/member/:facultyId").get(async (req, res) => {
         }
         for (let i = 0; i < faculty_member.comments.length; i++) {
             let Comment = await comments.getCommentById(faculty_member.comments[i].toString());
+            Comment._id =  Comment._id.toString()
             faculty_comments.push(Comment);
         }
+        
         res.render('faculty', {
             session: req.session,
             title: faculty_member.name, 

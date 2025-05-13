@@ -92,13 +92,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             if(typeof email !== 'string' || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
                 e.preventDefault()
-                error.textContent = "invalid email"
+                error.textContent = "invalid email or password"
                 error.hidden = false
                 return
             }
             if (typeof password !== 'string' || !/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)) {
                 e.preventDefault()
-                error.textContent = "invalid password"
+                error.textContent = "invalid email or password"
                 error.hidden = false
                 return
             }

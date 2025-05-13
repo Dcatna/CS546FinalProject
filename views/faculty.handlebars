@@ -7,6 +7,7 @@
 {{/if}}
 
 <h2>Rating: {{rating}}
+    <p>IDDDD {{id}}</p>
 {{#if courses}}
 <h2>Course Sections:</h2>
 <ul>
@@ -25,15 +26,19 @@
 {{/if}}
 {{#if comments}}
 <h2>Comments:</h2>
+
 <ul>
-    {{#each comments}}
+    {{#each comments as |comment|}}
+    
     <li>
         <h3>{{title}}</h3>
         <p>{{content}}</p>
         <a href="/profile/{{userId}}">{{userId}}</a>
         <em>{{date}}</em>
+
         {{#is_user userId ../curr_user}}
-        <form action="/faculty/member/{{id}}/comment/{{_id}}" method="POST">
+
+        <form action="/faculty/member/{{@root.id}}/comment/{{comment._id}}" method="POST">
             <input type="hidden" name='_method' value="DELETE"/>
             <button type="submit">
                 DELETE

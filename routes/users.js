@@ -82,7 +82,10 @@ router.route("/profile/:userId").get(async (req, res) => {
         if (!user.public && !isOwner) {
           const referer = req.get("Referer") || "/"
           return res.redirect(referer)
-        }       
+        }      
+
+        console.log(user.comments)
+        
         res.render("profile", {
           session: req.session,
           firstName: user.firstName,
