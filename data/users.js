@@ -22,6 +22,7 @@ export async function register(userId, firstName, lastName, emailAddr, password)
 
     const userCollection = await users()
     const duplicate = await userCollection.findOne({ userId: userId})
+    
     if(duplicate) {
       throw new Error("duplicate userid")
     }

@@ -24,10 +24,23 @@
 <form action="/schedules/csv/{{name}}" method="GET" style="display: inline">
     <input type="submit" name="Export to CSV" value="Export to CSV">
 </form>
+<form action="/schedules/calendar/{{name}}" method="GET" style="display: inline">
+    <input type="submit" name="Export to Google Calendar" value="Export to Google Calendar">
+</form>
 <form onsubmit="confirmDeletion(event)" action="/schedules/delete/{{name}}" method="POST" style="display: inline">
     <input type="submit" name="Delete Schedule" value="Delete Schedule">
 </form>
 {{> schedule}}
+{{#if hasAsyncClass}}
+<p>Sections without scheduled times:</p>
+<ul>
+  {{#each courses}}
+  {{#unless time}}
+  <li>{{course_section}}</li>
+  {{/unless}}
+  {{/each}}
+</ul>
+{{/if}}
 {{/each}}
 
 {{#unless schedules}}

@@ -2,6 +2,13 @@ import { courses, users } from "../config/mongoCollections.js";
 import { ObjectId } from "mongodb";
 import { Parser } from '@json2csv/plainjs';
 
+
+export const getAllCourses = async () => {
+  const coursesCollection = await courses()
+  const allCourses = await coursesCollection.find({}).toArray()
+  return allCourses
+}
+
 export const getCourseById = async (id) => {
     if (!id) throw `getCourseById(): No value for id`;
     if (typeof id !== 'string') throw  `getCourseById(): id is not of type \'string\'`;
@@ -131,7 +138,7 @@ export const getSectionTimes = (schedule) => {
       const color = colors[hashStringToColorIndex(course.course)];
     for (const day of course.days.split("/")){
       sections.push({
-        name: course.course,
+        name: course.course_section,
         time: course.time,
         startTime: startTime,
         duration: duration,
@@ -160,6 +167,64 @@ export const scheduleToCSV = (schedule) => {
   const opts = {};
   const parser = new Parser(opts);
   const csv = parser.parse(schedule);
+  return csv;
+}
+
+export const calendarExport = async (schedule) => {
+  
+  [schedule] = await unpackSchedules([schedule]);
+  
+  let courses = schedule.courses.filter(course => course.time)
+  courses = courses.map(course => ({
+    "Subject": course.course,
+    "Start Time": course.time.split(" - ")[0].trim(),
+    "End Time": course.time.split(" - ")[1].trim(),
+    "Description": course.instructor,
+    "Location": course.location,
+    daysOfWeek: course.days.split('/').map(day => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].indexOf(day))
+  }));
+  function pad(n){
+    return String(n).padStart(2, '0')
+  }
+  let data = [];
+  
+  const year = 2025;
+  const isLeapYear = year % 400 == 0 ? true : (year % 100 == 0 ? false : (year % 4 == 0));
+  const startMonth = 9; //1 indexed, september
+  const startDay = 2;
+  const startDoW = 1; //0 indexed, tuesday
+
+  const endMonth = 12;
+  const endDay = 22;
+
+  let month = startMonth, day = startDay, dow = startDoW;
+  while (month < endMonth || day <= endDay){
+
+    const date = `${pad(month)}/${pad(day)}/${year}`
+
+    const events = courses.filter(course => course.daysOfWeek.includes(dow)).map(event => ({
+      "Subject": event["Subject"],
+      "Start Time": event["Start Time"],
+      "End Time": event["End Time"],
+      "Description": event["Description"],
+      "Location": event["Location"],
+      "Start Date": date
+    }));
+
+    data = data.concat(events);
+
+    day += 1;
+
+    if (day > [-1, 31, (isLeapYear ? 29 : 28), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month]){
+      month += 1;
+      day = 1;
+    }
+    dow = (dow + 1) % 7;
+  }
+
+  const opts = {};
+  const parser = new Parser(opts);
+  const csv = parser.parse(data);
   return csv;
 }
 

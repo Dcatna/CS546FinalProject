@@ -219,7 +219,7 @@ export const addCourseSectionComment = async (course_id, commentId) => {
     }
     new_rating /= new_c_comments_len;
     const upd_course = await coursesCollection.findOneAndUpdate(
-        {_id: new ObjectId(f_id)}, 
+        {_id: new ObjectId(course_id)}, 
         {$push: {"comments": commentId}, $set: {"rating": new_rating}}, 
         {returnDocument: 'after'}
     );

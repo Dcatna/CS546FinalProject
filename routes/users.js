@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById, toggleUserPrivacyById, addSchedule, removeSchedule } from "../data/users.js";
-import { getCourseById, unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, conflicts, addToSchedule, removeFromSchedule } from "../data/courses.js";
+import { getCourseById, unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, calendarExport, conflicts, addToSchedule, removeFromSchedule } from "../data/courses.js";
 import multer from 'multer';
 import { Readable } from 'stream';
 import csv from 'csv-parser';
@@ -65,7 +65,7 @@ router.route("/login").get(async (req, res) => {
     } catch (e) {
         console.log(e);
         return res.status(400).render("signin", {
-            error: e.message,
+            errors: e.message,
             session: req.session
         })
     }
@@ -163,8 +163,9 @@ router.route("/schedules").get(async (req, res) => {
 
     let schedules = await unpackSchedules(req.session.user.schedules);
     schedules = schedules.map(schedule => ({
-        name: schedule.name,
-        sections: getSectionTimes(schedule)
+        ...schedule,
+        sections: getSectionTimes(schedule),
+        hasAsyncClass: schedule.courses.some(course => !course.time)
     }));
 
     res.render("schedules", {
@@ -264,6 +265,26 @@ router.post("/schedules/upload", upload.single("scheduleCSV"), async (req, res) 
     }
 })
 
+router.route("/schedules/calendar/:name").get(async (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+
+    const schedule = req.session.user.schedules.find(x => x.name === req.params.name);
+    try {
+        if (!schedule) throw 'Schedule not found';
+        res.header('Content-Type', 'text/csv');
+        res.attachment('calendar.csv'); // prompts file download
+        res.send(await calendarExport(schedule));
+    }
+    catch (e){
+        res.status(404).render('error', {
+            session: req.session,
+            message: e
+        });
+    }
+})
+
 router.route("/course/view/:courseId").get(async (req, res) => {
     if(!req.session || !req.session.user) {
         return res.redirect("/login");
@@ -296,7 +317,7 @@ router.route("/course/add/:courseId").post(async (req, res) => {
     try {
         if (!req.body.scheduleSelect) throw 'No schedule selected';
         await addToSchedule(req.body.scheduleSelect, req.params.courseId, req.session);
-        return res.redirect(`/course/${req.params.courseId}?schedule=${encodeURIComponent(req.body.scheduleSelect)}`)
+        return res.redirect(`/course/view/${req.params.courseId}?schedule=${encodeURIComponent(req.body.scheduleSelect)}`)
     }
     catch (e){
         res.status(400).render('error', {message: e, session: req.session});
