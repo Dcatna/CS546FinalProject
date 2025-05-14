@@ -2,13 +2,9 @@ import { Router } from "express";
 import { ObjectId } from "mongodb";
 import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById, toggleUserPrivacyById, addSchedule, removeSchedule, getAllUsers } from "../data/users.js";
 import { getCourseById, unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, calendarExport, conflicts, addToSchedule, removeFromSchedule } from "../data/courses.js";
-<<<<<<< HEAD
-import { getAllComments, getAllCommentsByCourseName, getOverallCourseRating, addCourseSectionComment, deleteCourseComment } from "../data/comments.js";
-=======
 import {createComment, addCourseSectionComment, getAllCommentsByCourseId} from "../data/comments.js"
 import { getAllComments } from "../data/comments.js";
 import { new_date } from "../data/comments.js";
->>>>>>> 5b1da140469fedbd1ccde4c088b604ebea8b8158
 import multer from 'multer';
 import { Readable } from 'stream';
 import csv from 'csv-parser';
