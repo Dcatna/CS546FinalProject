@@ -110,13 +110,13 @@ router.route("/member/:facultyId/comment").get(async (req, res) => {
     }
     let faculty_member, id;
     try {
-        id = id_checker(req.params.facultyId, 'id', `GET /faculty/member/${req.params.facultyId}`);
+        id = id_checker(req.params.facultyId, 'id', `GET /faculty/member/${req.params.facultyId}/comment`);
     } catch (e) {
         res.status(404).render('error', {message: e, session: req.session});
     }
     try {
         faculty_member = await faculty.getFacultyById(id);
-        res.render('comment', {session: req.session, title: `Comment: ${faculty_member.name}`, faculty_id: id.toString()});
+        res.render('comment', {session: req.session, title: `Comment: ${faculty_member.name}`, faculty_id: id.toString(), faculty: true});
     } catch (e) {
         res.status(500).render('error', {message: e, session: req.session});
     }
@@ -129,7 +129,7 @@ router.route("/member/:facultyId/comment").get(async (req, res) => {
     try {
         if (!req.body || Object.keys(req.body).length === 0) throw `${func_sig}: request body cannot be empty`;
         const keys = Object.keys(req.body);
-        if (keys.length > 3) throw `${func_sig}: request body cannot have more than 4 fields`;
+        if (keys.length > 3) throw `${func_sig}: request body cannot have more than 3 fields`;
         keys.map((key) => {if ((key !== `title`) && (key !== `content`) && (key !== `rating`)) throw `${func_sig}: \'${key}\' is an invalid key`});
         
         // id = id_checker(req.session.id, '_id', func_sig);
@@ -190,7 +190,7 @@ router.route("/member/:facultyId/comment/:commentId/delete").post(async (req, re
         f_id = id_checker(req.params.facultyId, 'facultyId', func_sig);
         c_id = id_checker(req.params.commentId, 'commentId', func_sig);
     } catch (e) {
-        return res.status(404).json({error: e});
+        res.status(404).render('error', {message: e, session: req.session});
     }
 
     try {
@@ -198,7 +198,7 @@ router.route("/member/:facultyId/comment/:commentId/delete").post(async (req, re
         console.log("DFELTE")
         return res.redirect(req.get("Referrer") || "/")
     } catch (e) {
-        return res.status(500).json({error: e.message});
+        res.status(500).render('error', {message: e, session: req.session});
     }
 })
 

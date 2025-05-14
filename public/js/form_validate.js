@@ -168,6 +168,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 err.hidden = false;
                 return;
             } 
+            if (title.length < 3) {
+                event.preventDefault();
+                err.textContent = `Error: title cannot be less than 3 characters`;
+                err.hidden = false;
+                return;
+            } 
 
             if (!content) {
                 event.preventDefault();

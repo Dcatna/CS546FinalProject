@@ -174,6 +174,7 @@ export const addFacultyComment = async (f_id, userId, title, content, rating) =>
 export const deleteFacultyComment = async (f_id, commentId, userId) => {
     f_id = id_checker(f_id, 'f_id', 'deleteFacultyComment()');
     commentId = id_checker(commentId, 'commentId', 'deleteFacultyComment()');
+    userId = str_checker(userId, 'userId', 'deleteFacultyComment()');
 
     const commentCollection = await comments();
     const facultyCollection = await faculty();
@@ -235,13 +236,33 @@ export const deleteFacultyComment = async (f_id, commentId, userId) => {
 
 // Course Comments
 // Please note: This is to act as a starting point please update according to how u wish it set
-export const addCourseSectionComment = async (course_id, commentId) => {
+export const addCourseSectionComment = async (course_id, userId, title, content, rating) => {
     let func_sig = 'addCourseSectionComment()';
     course_id = id_checker(course_id, 'course_id', func_sig);
-    commentId = id_checker(commentId, 'commentId', func_sig);
+    userId = str_checker(userId, 'userId', 'addFacultyComment()');
+    title = title_checker(title, 'title', 'addFacultyComment()');
+    content = str_checker(content, 'content', 'addFacultyComment()');
+    num_checker(rating, 'rating', 'addFacultyComment()');
+    if (rating < 0 || rating > 5) throw `addFacultyComment(): rating cannot be less than 0 or greater than 5`;
+
+    let new_comment = {
+        // user_id: new Object(user_id),
+        userId: userId,
+        title: title,
+        content: content,
+        rating: rating,
+        date: new_date(true),
+        for_id: new ObjectId(course_id),
+        for: "course"
+    };
+
+    const commentCollection = await comments();    
+    const insert_info = await commentCollection.insertOne(new_comment);
+    if (!insert_info.acknowledged || !insert_info.insertedId) throw `addFacultyComment(): Could not add comment`;
+    const inserted_comment = await getCommentById(insert_info.insertedId.toString())
 
     const coursesCollection = await courses();
-
+    let commentId = inserted_comment._id;
     let course = await course_data.getCourseById(course_id);
     if (course.comments.includes(commentId)) throw `${func_sig}: commentId already exists in course's comments`;
     let new_c_comments_len = course.comments.length + 1;
@@ -261,43 +282,77 @@ export const addCourseSectionComment = async (course_id, commentId) => {
 
     if (!upd_course) throw `${func_sig}: Could not add comment to course`;
 
+        
+    const userCollection = await users();
+    let user = await userCollection.findOneAndUpdate(
+        {userId: userId},
+        {$push: {"comments": commentId}},
+        {returnDocument: 'after'}
+    );
+    if (!user) throw `addFacultyComment(): Could not add comment to user`;
+
     return upd_course;
 
 }
 
-export const deleteCourseComment = async (course_id, commentId) => {
+export const deleteCourseComment = async (course_id, userId, commentId) => {
     let func_sig = 'deleteCourseComment()';
     course_id = id_checker(course_id, 'course_id', func_sig);
     commentId = id_checker(commentId, 'commentId', func_sig);
 
     const commentCollection = await comments();
     const coursesCollection = await courses();
+    const usersCollection =  await users()
+
+    const validation = await getCommentById(commentId) //have to make sure the person deleting is the user of the comment...
+    if (validation.userId !== userId) {
+        return 
+    }
+
     let course = await course_data.getCourseById(course_id);
 
-    let new_c_comments_len = course.comments.length - 1 === 0 ? 1 : course.comments.length - 1;
+    let new_course_comment_len = course.comments.length - 1 === 0 ? 1 : course.comments.length - 1;
     let new_rating = 0;
     let new_comments = [];
-    course.comments.map((c_id) => {
-        if (c_id !== commentId) {
-            let comment = getCommentById(c_id);
-            new_rating += comment.rating;
-            new_comments.push(c_id);
+
+
+    for (const comment of course.comments) {
+         if (comment._id !== commentId && comment._id) {            
+            let com = await getCommentById(comment._id);
+            if (com) {
+                console.log(com)
+                new_rating += com.rating;
+                new_comments.push(com._id);
+            }
+
         }
-    })
-    new_rating /= new_c_comments_len;
+    }
+    
+    new_rating /= new_course_comment_len;
 
     const upd_course = await coursesCollection.findOneAndUpdate(
-        {_id: new ObjectId(f_id)},
+        {_id: new ObjectId(course_id)},
         {$set: {comments: new_comments, rating: new_rating}},
         {returnDocument: 'after'}
     );
 
-    if (!upd_course) throw `${func_sig}: Could not delete comment from faculty member`;
+    if (!upd_course) throw new Error(`${func_sig}: Could not delete comment from course`);
 
     const deleted_comment_info = await commentCollection.findOneAndDelete(
         {_id: new ObjectId(commentId)}
     );
-    if (!deleted_comment_info) throw `${func_sig}: Could not delete comment with id ${commentId}`;
+    if (!deleted_comment_info) throw new Error(`${func_sig}: Could not delete comment with id ${commentId}`);
+
+    const user_delete_comment_info = await await usersCollection.updateOne(
+        { userId: userId },
+        {
+            $pull: {
+                comments: new ObjectId(commentId)
+            }
+        }
+    );
+
+    if (!user_delete_comment_info) throw new Error(`${func_sig}: Could not delete comment with id ${commentId}`);
 
     return deleted_comment_info;
 
@@ -308,9 +363,9 @@ export const getAllCommentsByCourseName = async (course_name) => {
     course_name = str_checker(course_name, 'course_name', func_sig);
 
     const coursesCollection = await courses();
-    let name_to_search = course_name.replace(/[\[\]\-\\\/^$\*\+\?\.\(\)\|\{\}]/g, '\\$&')
+    // let name_to_search = course_name.replace(/[\[\]\-\\\/^$\*\+\?\.\(\)\|\{\}]/g, '\\$&')
     let course_sections = await coursesCollection.find(
-        {"name": {$regex: `^${name_to_search}$`, $options: 'i'}}
+        {course: {$regex: course_name , $options: 'i'}}
     ).toArray();
 
     if (course_sections.length === 0) throw `${func_sig}: ${course_name} does not exist`;
@@ -331,9 +386,9 @@ export const getOverallCourseRating = async (course_name) => {
     course_name = str_checker(course_name, 'course_name', func_sig);
 
     const coursesCollection = await courses();
-    let name_to_search = course_name.replace(/[\[\]\-\\\/^$\*\+\?\.\(\)\|\{\}]/g, '\\$&')
+    // let name_to_search = course_name.replace(/[\[\]\-\\\/^$\*\+\?\.\(\)\|\{\}]/g, '\\$&')
     let course_sections = await coursesCollection.find(
-        {"name": {$regex: `^${name_to_search}$`, $options: 'i'}}
+        {course: {$regex: course_name, $options: 'i'}}
     ).toArray();
 
     if (course_sections.length === 0) throw `${func_sig}: ${course_name} does not exist`;

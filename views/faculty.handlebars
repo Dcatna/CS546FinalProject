@@ -13,7 +13,7 @@
 <ul>
     {{#each courses}}
     <li class="course-item">
-        <strong><a href="/course/{{_id}}">{{course_section}}</a></strong><br>
+        <strong><a href="/course/view/{{_id}}">{{course_section}}</a></strong><br>
         {{#if time}}
         <em>Time: </em>{{time}}<br>
         {{/if}}
@@ -24,9 +24,9 @@
     {{/each}}
 </ul>
 {{/if}}
+
 {{#if comments}}
 <h2>Comments:</h2>
-
 <ul>
     {{#each comments as |comment|}}
     
