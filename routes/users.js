@@ -536,11 +536,9 @@ router.route("/course/view/:courseId").get(async (req, res) => {
     }
     try {
 
-        if (!courseId) throw `getCourseById(): No value for id`;
-        if (typeof courseId !== 'string') throw  `Course id is not of type \'string\'`;
-        courseId = courseId.trim();
-        if (courseId.length === 0) throw `Course id cannot consist of just spaces`;
-        if (!ObjectId.isValid(id)) throw `Course id is an invalid objectID`;
+        if (!req.params.courseId) throw `getCourseById(): No value for id`;
+        if (typeof req.params.courseId !== 'string') throw  `Course id is not of type \'string\'`;
+        if (!ObjectId.isValid(req.params.courseId)) throw `Course id is an invalid objectID`;
 
         const course = await getCourseById(req.params.courseId);
         const userId = req.session.user.userId
