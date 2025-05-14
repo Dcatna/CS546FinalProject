@@ -2,13 +2,14 @@ import { Router } from "express";
 import { ObjectId } from "mongodb";
 import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById, toggleUserPrivacyById, addSchedule, removeSchedule, getAllUsers } from "../data/users.js";
 import { getCourseById, unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, calendarExport, conflicts, addToSchedule, removeFromSchedule } from "../data/courses.js";
-import {createComment, addCourseSectionComment, getAllCommentsByCourseId, getAllCommentsByCourseName, getOverallCourseRating} from "../data/comments.js"
+import {createComment, addCourseSectionComment, getAllCommentsByCourseId, getAllCommentsByCourseName, getOverallCourseRating, deleteCourseComment} from "../data/comments.js"
 import { getAllComments } from "../data/comments.js";
 import { new_date } from "../data/comments.js";
 import multer from 'multer';
 import { Readable } from 'stream';
 import csv from 'csv-parser';
 import { users, courses, comments } from "../config/mongoCollections.js";
+import xss from 'xss';
 
 
 const storage = multer.memoryStorage()
@@ -52,7 +53,12 @@ router.route("/register").get(async (req, res) => {
     }
     res.render("signup", {session: req.session})
 }).post(async (req, res) => {
-    const {username, firstName, lastName, email, password} = req.body;
+    let {username, firstName, lastName, email, password} = req.body;
+    username = xss(username)
+    firstName = xss(firstName)
+    lastName = xss(lastName)
+    email = xss(email)
+    password = xss(password)
     
 
     try {
@@ -91,7 +97,9 @@ router.route("/login").get(async (req, res) => {
     }
     res.render("signin", {session: req.session})
 }).post(async (req, res) => {
-    const {email, password} = req.body
+    let {email, password} = req.body
+    email = xss(email)
+    password = xss(password)
     //ill just do error checks in the form validation
 
     try {
@@ -103,10 +111,10 @@ router.route("/login").get(async (req, res) => {
         }
         const user = await logIn(email, password)
         req.session.user = {
-            firstName: user.firstName,
-            lastName: user.lastName,
-            userId: user.userId,
-            createdAt: user.createdAt,
+            firstName: xss(user.firstName),
+            lastName: xss(user.lastName),
+            userId: xss(user.userId),
+            createdAt: xss(user.createdAt),
             schedules: user.schedules
         }
         return res.redirect(`/profile/${user.userId}`)
@@ -126,7 +134,7 @@ router.route("/profile/:userId").get(async (req, res) => {
         if(!req.session || !req.session.user) {
             return res.redirect("/login");
         }
-        const targetUserId = req.params.userId
+        const targetUserId = xss(req.params.userId)
 
         const user = await getUserProfileById(targetUserId)
         const viewerId = req.session.user?.userId
@@ -161,7 +169,7 @@ router.route("/profile/toggle-privacy").post(async (req, res) => {
         return res.status(401).render("error", { message: "Not logged in" })
       }
   
-      const newSetting = req.body.public === "on"
+      const newSetting = xss(req.body.public) === "on"
   
       const result = await  toggleUserPrivacyById(user.userId, newSetting)
       if (!result) {
@@ -177,7 +185,7 @@ router.route("/profile/toggle-privacy").post(async (req, res) => {
 
 router.route("/profile/image/:userId").get(async (req, res) => {
     try {
-        const image = await getProfilePicture(req.params.userId)
+        const image = await getProfilePicture(xss(req.params.userId))
         if (image === null) {
             return res.send(null) //send null so it knows to use the default
         }
@@ -192,7 +200,7 @@ router.route("/profile/image/:userId").get(async (req, res) => {
 router.post("/profile/upload", upload.single("profileImage"), async (req, res) => {
     try {
         const userId = req.session.user.userId
-        const file = req.file
+        const file = xss(req.file)
 
         if (!file) {
             return res.status(400).send("no files")
@@ -285,7 +293,13 @@ router.get('/search/results', async (req, res) => {
     if(!req.session || !req.session.user) {
         return res.redirect("/login")
     }
-    const { query, year, semester, level, format, professor } = req.query;
+    let { query, year, semester, level, format, professor } = req.query;
+    query = xss(query);
+    year = xss(year);
+    semester = xss(semester);
+    level = xss(level);
+    format = xss(format);
+    professor = xss(professor);
   
     const filters = {
       year,
@@ -315,7 +329,7 @@ router.route("/schedules/csv/:name").get((req, res) => {
         return res.redirect("/login");
     }
 
-    const schedule = req.session.user.schedules.find(x => x.name === req.params.name);
+    const schedule = req.session.user.schedules.find(x => x.name === xss(req.params.name));
     try {
         if (!schedule) throw 'Schedule not found';
         res.header('Content-Type', 'text/csv');
@@ -336,7 +350,7 @@ router.post("/schedules/upload", upload.single("scheduleCSV"), async (req, res) 
     }
     try {
         const userId = req.session.user.userId
-        const file = req.file
+        const file = xss(req.file)
         let schedule;
 
         if (!file) {
@@ -371,7 +385,7 @@ router.route("/schedules/calendar/:name").get(async (req, res) => {
         return res.redirect("/login");
     }
 
-    const schedule = req.session.user.schedules.find(x => x.name === req.params.name);
+    const schedule = req.session.user.schedules.find(x => x.name === xss(req.params.name));
     try {
         if (!schedule) throw 'Schedule not found';
         res.header('Content-Type', 'text/csv');
@@ -391,7 +405,7 @@ router.route("/course/:courseId/comment").get( async (req, res) => {
         return res.redirect("/login");
     }
     try {
-        const courseId = req.params.courseId
+        const courseId = xss(req.params.courseId)
         res.render("courseComment", {
             courseId: courseId,
             session: req.session
@@ -415,10 +429,10 @@ router.route("/course/:courseId/comment/create").post(async (req, res) => {
         if (!ObjectId.isValid(req.params.courseId) || !courseCollection.findOne({_id: new ObjectId(req.params.courseId)})) throw new Error('That course does not exist')
         const comment = {
             userId: userId,
-            title: req.body.title,
-            content: req.body.content,
-            rating: Number(req.body.rating),
-            for_id: new ObjectId(req.params.courseId),
+            title: xss(req.body.title),
+            content: xss(req.body.content),
+            rating: Number(xss(req.body.rating)),
+            for_id: new ObjectId(xss(req.params.courseId)),
             date: new_date(true),
             for: "courses"
         }
@@ -440,24 +454,24 @@ router.route("/course/:courseId/comment/create").post(async (req, res) => {
         )
 
         const courseComments = await courseCollection.findOneAndUpdate(
-            {_id: new ObjectId(req.params.courseId)},
+            {_id: new ObjectId(xss(req.params.courseId))},
             {$push: {"comments": inserted.insertedId}}
         )
         let newRating = 0
         if (courseComments.comments.length === 0) {
-            newRating = Number(req.body.rating)
+            newRating = Number(xss(req.body.rating))
             
         } else {
-            newRating = Math.floor( (courseComments.rating + Number(req.body.rating) ) / 2)
+            newRating = Math.floor( (courseComments.rating + Number(xss(req.body.rating)) ) / 2)
         }
 
         await courseCollection.updateOne(
-                {_id: new ObjectId(req.params.courseId)},
+                {_id: new ObjectId(xss(req.params.courseId))},
                 {$set: {rating: newRating}}
             )
 
 
-        res.status(200).redirect(`/course/view/${req.params.courseId}`)
+        res.status(200).redirect(`/course/view/${xss(req.params.courseId)}`)
 
     } catch (e) {
         res.status(400).render('error', {message: e.message});
@@ -480,22 +494,22 @@ router.route("/course/:courseId/:commentId/comment/delete").post(async (req, res
             {userId: userId},
             {
                 $pull: {
-                    comments: new ObjectId(req.params.commentId)
+                    comments: new ObjectId(xss(req.params.commentId))
                 }
             }
         )
 
         const courseComments = await courseCollection.findOneAndUpdate(
-            {_id: new ObjectId(req.params.courseId)},
+            {_id: new ObjectId(xss(req.params.courseId))},
             {
                 $pull: {
-                    comments: new ObjectId(req.params.commentId)
+                    comments: new ObjectId(xss(req.params.commentId))
                 }
             }
         )
 
         const comment = await commentsCollection.findOne(
-            {_id: new ObjectId(req.params.commentId)}
+            {_id: new ObjectId(xss(req.params.commentId))}
         )
 
         /*
@@ -513,15 +527,15 @@ router.route("/course/:courseId/:commentId/comment/delete").post(async (req, res
             newRating = Math.floor( ((n * courseComments.rating) - comment.rating) / (n - 1) )
        }
         await courseCollection.updateOne(
-            {_id: new ObjectId(req.params.courseId)},
+            {_id: new ObjectId(xss(req.params.courseId))},
             {$set: {rating: newRating}}
         )
 
         await commentsCollection.deleteOne(
-            {_id: new ObjectId(req.params.commentId)}
+            {_id: new ObjectId(xss(req.params.commentId))}
         )
 
-        res.status(200).redirect(`/course/view/${req.params.courseId}`)
+        res.status(200).redirect(`/course/view/${xss(req.params.courseId)}`)
 
 
     } catch (e) {
@@ -535,19 +549,19 @@ router.route("/course/view/:courseId").get(async (req, res) => {
         return res.redirect("/login");
     }
     try {
-
+        req.params.courseId = xss(req.params.courseId)
         if (!req.params.courseId) throw `getCourseById(): No value for id`;
         if (typeof req.params.courseId !== 'string') throw  `Course id is not of type \'string\'`;
         if (!ObjectId.isValid(req.params.courseId)) throw `Course id is an invalid objectID`;
 
         const course = await getCourseById(req.params.courseId);
         const userId = req.session.user.userId
-        const courseComment = await getAllCommentsByCourseId(req.params.courseId)
+        const courseComment = await getAllCommentsByCourseId(xss(req.params.courseId))
 
         if (!course) throw 'Course not found';
         
         let schedules = await unpackSchedules(req.session.user.schedules);
-        const selectedSchedule = req.query.schedule;
+        const selectedSchedule = xss(req.query.schedule);
 
         schedules = schedules.map(schedule => {
             const alreadyContains = (schedule.courses.find(x => x._id.toString() == course._id.toString()) != undefined)
@@ -569,7 +583,7 @@ router.route("/course/view/:courseId/comment").get(async (req, res) => {
     }
     let course, id;
     try {
-        id = id_checker(req.params.courseId, 'id', `GET /faculty/member/${req.params.courseId}/comment`);
+        id = id_checker(xss(req.params.courseId), 'id', `GET /faculty/member/${xss(req.params.courseId)}/comment`);
     } catch (e) {
         res.status(404).render('error', {message: e, session: req.session});
     }
@@ -584,7 +598,7 @@ router.route("/course/view/:courseId/comment").get(async (req, res) => {
         return res.redirect("/login");
     }
     let userId, title, content, rating, courseId, course, upd_course_member;
-    let func_sig = `POST /course/view/${req.params.courseId}/comment`;
+    let func_sig = `POST /course/view/${xss(req.params.courseId)}/comment`;
     try {
         if (!req.body || Object.keys(req.body).length === 0) throw `${func_sig}: request body cannot be empty`;
         const keys = Object.keys(req.body);
@@ -593,17 +607,17 @@ router.route("/course/view/:courseId/comment").get(async (req, res) => {
         
         // id = id_checker(req.session.id, '_id', func_sig);
         userId = str_checker(req.session.user.userId, 'userId', func_sig);
-        title = title_checker(req.body.title, 'title', func_sig);
-        content = str_checker(req.body.content, 'content', func_sig);
+        title = title_checker(xss(req.body.title), 'title', func_sig);
+        content = str_checker(xss(req.body.content), 'content', func_sig);
 
-        rating = num_checker(req.body.rating, 'rating', func_sig);
+        rating = num_checker(xss(req.body.rating), 'rating', func_sig);
         if (rating < 0 || rating > 5) throw `${func_sig}: rating cannot be less than 0 or greater than 5`;
 
-        courseId = id_checker(req.params.courseId, 'courseId', func_sig);
+        courseId = id_checker(xss(req.params.courseId), 'courseId', func_sig);
         try {
             course = await getCourseById(courseId);
         } catch (e) {
-            throw `${func_sig}: course with the id of ${req.params.courseId} does not exist`;
+            throw `${func_sig}: course with the id of ${xss(req.params.courseId)} does not exist`;
         }
     } catch (e) {
         res.status(404).render('error', {message: e, session: req.session});
@@ -625,10 +639,10 @@ router.route("/course/view/:courseId/comment/:commentId/delete").post(async (req
     }
     const userId = req.session.user.userId
 
-    let func_sig = `POST /faculty/member/${req.params.courseId}/comment/${req.params.commentId}/delete`
+    let func_sig = `POST /faculty/member/${xss(req.params.courseId)}/comment/${xss(req.params.commentId)}/delete`
     try {
-        courseId = id_checker(req.params.courseId, 'courseId', func_sig);
-        commentId = id_checker(req.params.commentId, 'commentId', func_sig);
+        courseId = id_checker(xss(req.params.courseId), 'courseId', func_sig);
+        commentId = id_checker(xss(req.params.commentId), 'commentId', func_sig);
     } catch (e) {
         res.status(404).render('error', {message: e, session: req.session});
     }
@@ -647,6 +661,8 @@ router.route("/course/add/:courseId").post(async (req, res) => {
     }
 
     try {
+        req.body.scheduleSelect = xss(req.body.scheduleSelect)
+        req.body.scheduleSelect = xss(req.params.courseId)
         if (!req.body.scheduleSelect) throw 'No schedule selected';
         if (typeof(req.body.scheduleSelect) != 'string') throw 'Invalid schedule name';
 
@@ -664,6 +680,8 @@ router.route("/course/remove/:courseId").post(async (req, res) => {
     }
 
     try {
+        req.body.scheduleSelect = xss(req.body.scheduleSelect)
+        req.body.scheduleSelect = xss(req.params.courseId)
         if (!req.body.scheduleSelect) throw 'No schedule selected';
         if (typeof(req.body.scheduleSelect) != 'string') throw 'Invalid schedule name';
         await removeFromSchedule(req.body.scheduleSelect, req.params.courseId, req.session);
