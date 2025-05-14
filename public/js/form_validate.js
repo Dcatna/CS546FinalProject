@@ -233,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             if (!rating) {
                 event.preventDefault();
-                err.textrating = `Error: No value for rating field`;
+                err.textContent = `Error: No value for rating field`;
                 err.hidden = false;
                 return;
             }
