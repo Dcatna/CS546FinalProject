@@ -375,7 +375,8 @@ router.route("/course/:courseId/comment").get( async (req, res) => {
     try {
         const courseId = req.params.courseId
         res.render("courseComment", {
-            courseId: courseId
+            courseId: courseId,
+            session: req.session
         })
 
     } catch (e) {
