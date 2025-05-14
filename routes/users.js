@@ -204,7 +204,6 @@ router.route("/schedules").get(async (req, res) => {
         sections: getSectionTimes(schedule),
         hasAsyncClass: schedule.courses.some(course => !course.time)
     }));
-    console.log(schedules, "SDFSFDDFSDF")
     res.render("schedules", {
         session: req.session,
         schedules: schedules
@@ -251,7 +250,7 @@ router.route("/view/:scheduleId").get(async (req, res) => {
             schedules: [fullSchedule]
         });
     } catch (e) {
-        console.log(e.message, "SD")
+        console.log(e.message)
         res.status(500).redirect(req.get("Referer") || "/")
     }
 
@@ -482,8 +481,6 @@ router.route("/course/:courseId/:commentId/comment/delete").post(async (req, res
             r = rating to be removed
             new_avg = ((n * avg) - r) / n -1
         */
-       console.log(req.params, "PARAMS")
-       console.log(courseComments, "SDFSDF")
 
        const n = courseComments.comments.length
        let newRating = 0
@@ -517,7 +514,6 @@ router.route("/course/view/:courseId").get(async (req, res) => {
     try {
         const course = await getCourseById(req.params.courseId);
         const userId = req.session.user.userId
-        console.log(req.params.courseId)
         const courseComment = await getAllCommentsByCourseId(req.params.courseId)
 
         if (!course) throw 'Course not found';
@@ -599,7 +595,6 @@ router.route("/course/view/:courseId/comment").get(async (req, res) => {
 });
 
 router.route("/course/view/:courseId/comment/:commentId/delete").post(async (req, res) => {
-    console.log("HELLOOOOO")
     let courseId, commentId;
     if(!req.session || !req.session.user) {
         return res.redirect("/login");
@@ -616,7 +611,6 @@ router.route("/course/view/:courseId/comment/:commentId/delete").post(async (req
 
     try {
         let deletedComment = await deleteCourseComment(courseId, userId, commentId);
-        console.log("DFELTE")
         return res.redirect(req.get("Referrer") || "/")
     } catch (e) {
         res.status(500).render('error', {message: e, session: req.session});
