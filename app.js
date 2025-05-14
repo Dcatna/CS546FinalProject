@@ -29,6 +29,14 @@ Handlebars.registerHelper('ifEquals', function(arg1, arg2, options) {
     return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
 });
 
+Handlebars.registerHelper('ifEmptyComments', function(courseComments, facultyComments, options) {
+    if (courseComments.length === 0 && facultyComments.length === 0) {
+        return options.fn(this); 
+    } else {
+        return options.inverse(this); 
+    }
+});
+
 
 
 app.use(
