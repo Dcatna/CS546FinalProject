@@ -200,7 +200,7 @@ router.route("/profile/image/:userId").get(async (req, res) => {
 router.post("/profile/upload", upload.single("profileImage"), async (req, res) => {
     try {
         const userId = req.session.user.userId
-        const file = xss(req.file)
+        const file = req.file
 
         if (!file) {
             return res.status(400).send("no files")
