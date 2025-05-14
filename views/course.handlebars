@@ -1,5 +1,5 @@
 <h1>{{this.course_section}}</h1><br>
-<em>Professor:</em> {{instructor}}<br>
+<em>Professor:</em> {{#if instructor_id}}<a href="/faculty/member/{{instructor_id}}">{{instructor}}</a>{{else}}{{instructor}}{{/if}}<br>
 <em>Location:</em> {{location}}<br>
 <em>Meeting Pattern:</em> {{days}} {{time}}
 
@@ -7,27 +7,25 @@
 {{#if comments}}
 <h2>Comments:</h2>
 
-<ul>
+<ul style="list-style-type: none; padding: 0;">
     {{#each comments as |comment|}}
-    
     <li>
-        <h3>{{title}}</h3>
-        <p>{{content}}</p>
-        <a href="/profile/{{userId}}">{{userId}}</a>
-        <em>{{date}}</em>
+        <div class="comment-box">
+            <h3 class="comment-title">{{comment.title}}</h3>
+            <p class="comment-rating">Posted by <a href="/profile/{{comment.userId}}">{{comment.userId}}</a> on <em>{{comment.date}}</em></p>
+            <p class="comment-content">{{comment.content}}</p>
 
-        {{#ifEquals @root.userId comment.userId}}
+            {{#ifEquals @root.userId comment.userId}}
             <form action="/course/{{@root._id}}/{{comment._id}}/comment/delete" method="POST">
-            <button type="submit">
-                DELETE
-            </button>
+                <button type="submit">DELETE</button>
             </form>
-
-        {{/ifEquals}}
+            {{/ifEquals}}
+        </div>
     </li>
     {{/each}}
 </ul>
 {{/if}}
+
 
 <form action="/course/{{@root._id}}/comment" method="GET" id="faculty-comment">
     <input type="submit" value="Comment">

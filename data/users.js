@@ -5,7 +5,7 @@ import { courses, users } from "../config/mongoCollections.js";
 
 export async function register(userId, firstName, lastName, emailAddr, password) { //returns the valid user object
     //basic checks
-    if(!userId || typeof userId !== "string" ) { //prolly jsut gonna check objectid too 
+    if(!userId || typeof userId !== "string" || !/^[A-Za-z0-9]{5,20}$/.test(userId.trim())) { //prolly jsut gonna check objectid too 
         throw new Error("invalid userId")
     }
     if(!firstName || typeof firstName !== "string" || !lastName || typeof lastName !== "string") {

@@ -56,6 +56,18 @@ router.route("/register").get(async (req, res) => {
     
 
     try {
+        if(!userId || typeof userId !== "string" || !/^[A-Za-z0-9]{5,20}$/.test(userId.trim())) { //prolly jsut gonna check objectid too 
+            throw new Error("invalid userId")
+        }
+        if(!firstName || typeof firstName !== "string" || !lastName || typeof lastName !== "string") {
+            throw new Error("invalid first or last name")
+        }
+        if(!emailAddr || typeof emailAddr !== "string" || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailAddr)) {
+            throw new Error("invalid email address")
+        }
+        if(!password || typeof password !== "string" || !/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)) {
+            throw new Error("invalid password")
+        }
         const result = await register(username, firstName, lastName, email, password)
         if (result.registrationCompleted) {
             return res.redirect("/login")
@@ -83,6 +95,12 @@ router.route("/login").get(async (req, res) => {
     //ill just do error checks in the form validation
 
     try {
+        if(!email || typeof email !== "string") {
+            throw new Error("invalid email address")
+        }
+        if (!password || typeof password !== "string") {
+            throw new Error("invalid password")
+        }
         const user = await logIn(email, password)
         req.session.user = {
             firstName: user.firstName,
@@ -204,7 +222,6 @@ router.route("/schedules").get(async (req, res) => {
         sections: getSectionTimes(schedule),
         hasAsyncClass: schedule.courses.some(course => !course.time)
     }));
-    console.log(schedules, "SDFSFDDFSDF")
     res.render("schedules", {
         session: req.session,
         schedules: schedules
@@ -251,7 +268,7 @@ router.route("/view/:scheduleId").get(async (req, res) => {
             schedules: [fullSchedule]
         });
     } catch (e) {
-        console.log(e.message, "SD")
+        console.log(e.message)
         res.status(500).redirect(req.get("Referer") || "/")
     }
 
@@ -323,7 +340,7 @@ router.post("/schedules/upload", upload.single("scheduleCSV"), async (req, res) 
         let schedule;
 
         if (!file) {
-            return res.status(400).send("no file")
+            return res.status(400).render('error', {message: 'No file recieved', session: req.session})
         }
 
         // Parse the CSV file
@@ -376,7 +393,8 @@ router.route("/course/:courseId/comment").get( async (req, res) => {
     try {
         const courseId = req.params.courseId
         res.render("courseComment", {
-            courseId: courseId
+            courseId: courseId,
+            session: req.session
         })
 
     } catch (e) {
@@ -394,6 +412,7 @@ router.route("/course/:courseId/comment/create").post(async (req, res) => {
         const commentsCollection = await comments()
         const courseCollection = await courses()
 
+        if (!ObjectId.isValid(req.params.courseId) || !courseCollection.findOne({_id: new ObjectId(req.params.courseId)})) throw new Error('That course does not exist')
         const comment = {
             userId: userId,
             title: req.body.title,
@@ -403,6 +422,7 @@ router.route("/course/:courseId/comment/create").post(async (req, res) => {
             date: new_date(true),
             for: "courses"
         }
+        
         Object.values(comment).forEach((com) => {
             if(!com) {
                 return res.status(400).redirect(req.get("Referer") || "/")
@@ -449,6 +469,8 @@ router.route("/course/:courseId/:commentId/comment/delete").post(async (req, res
         return res.redirect("/login");
     }
     try {
+        if (!ObjectId.isValid(req.params.courseId)) throw new Error("Invalid course id");
+        if (!ObjectId.isValid(req.params.commentId)) throw new Error("Invalid comment id");
         const userId = req.session.user.userId
         const userCollection = await users()
         const commentsCollection = await comments()
@@ -482,8 +504,6 @@ router.route("/course/:courseId/:commentId/comment/delete").post(async (req, res
             r = rating to be removed
             new_avg = ((n * avg) - r) / n -1
         */
-       console.log(req.params, "PARAMS")
-       console.log(courseComments, "SDFSDF")
 
        const n = courseComments.comments.length
        let newRating = 0
@@ -515,9 +535,15 @@ router.route("/course/view/:courseId").get(async (req, res) => {
         return res.redirect("/login");
     }
     try {
+
+        if (!courseId) throw `getCourseById(): No value for id`;
+        if (typeof courseId !== 'string') throw  `Course id is not of type \'string\'`;
+        courseId = courseId.trim();
+        if (courseId.length === 0) throw `Course id cannot consist of just spaces`;
+        if (!ObjectId.isValid(id)) throw `Course id is an invalid objectID`;
+
         const course = await getCourseById(req.params.courseId);
         const userId = req.session.user.userId
-        console.log(req.params.courseId)
         const courseComment = await getAllCommentsByCourseId(req.params.courseId)
 
         if (!course) throw 'Course not found';
@@ -598,7 +624,6 @@ router.route("/course/view/:courseId/comment").get(async (req, res) => {
 });
 
 router.route("/course/view/:courseId/comment/:commentId/delete").post(async (req, res) => {
-    console.log("HELLOOOOO")
     let courseId, commentId;
     if(!req.session || !req.session.user) {
         return res.redirect("/login");
@@ -615,7 +640,6 @@ router.route("/course/view/:courseId/comment/:commentId/delete").post(async (req
 
     try {
         let deletedComment = await deleteCourseComment(courseId, userId, commentId);
-        console.log("DFELTE")
         return res.redirect(req.get("Referrer") || "/")
     } catch (e) {
         res.status(500).render('error', {message: e, session: req.session});
@@ -629,6 +653,8 @@ router.route("/course/add/:courseId").post(async (req, res) => {
 
     try {
         if (!req.body.scheduleSelect) throw 'No schedule selected';
+        if (typeof(req.body.scheduleSelect) != 'string') throw 'Invalid schedule name';
+
         await addToSchedule(req.body.scheduleSelect, req.params.courseId, req.session);
         return res.redirect(`/course/view/${req.params.courseId}?schedule=${encodeURIComponent(req.body.scheduleSelect)}`)
     }
@@ -643,6 +669,8 @@ router.route("/course/remove/:courseId").post(async (req, res) => {
     }
 
     try {
+        if (!req.body.scheduleSelect) throw 'No schedule selected';
+        if (typeof(req.body.scheduleSelect) != 'string') throw 'Invalid schedule name';
         await removeFromSchedule(req.body.scheduleSelect, req.params.courseId, req.session);
         return res.redirect(`/course/view/${req.params.courseId}?schedule=${encodeURIComponent(req.body.scheduleSelect)}`);
     }   
@@ -657,6 +685,8 @@ router.route("/schedules/delete/:name").post(async (req, res) => {
     }
 
     try {
+        if (!req.params.name) throw 'No name provided';
+        if (typeof(req.params.name) != 'string') throw 'Name not a string';
         await removeSchedule(req.params.name, req.session);
         return res.redirect('/schedules')
     }
@@ -671,6 +701,7 @@ router.route("/schedules/new").post(async (req, res) => {
     }
 
     try {
+        if (!req.body.scheduleName || typeof(req.body.scheduleName) != 'string') throw 'Invalid schedule name';
         await addSchedule({
             name: req.body.scheduleName,
             courses: []

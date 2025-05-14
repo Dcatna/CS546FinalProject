@@ -196,7 +196,6 @@ export const deleteFacultyComment = async (f_id, commentId, userId) => {
          if (comment._id !== commentId && comment._id) {            
             let com = await getCommentById(comment._id);
             if (com) {
-                console.log(com)
                 new_rating += com.rating;
                 new_comments.push(com._id);
             }
@@ -320,7 +319,6 @@ export const deleteCourseComment = async (course_id, userId, commentId) => {
          if (comment._id !== commentId && comment._id) {            
             let com = await getCommentById(comment._id);
             if (com) {
-                console.log(com)
                 new_rating += com.rating;
                 new_comments.push(com._id);
             }
@@ -393,8 +391,6 @@ export const getAllCommentsByCourseId = async (courseId) => {
     if (!course) {
         throw new Error("Course not found")
     }
-
-    console.log(course)
 
     const comment = await commentCollection
     .find({ _id: { $in: course.comments.map(id => new ObjectId(id)) } })

@@ -69,7 +69,6 @@ router.route("/member/:facultyId").get(async (req, res) => {
     let faculty_member, id;
     try {
         id = id_checker(req.params.facultyId, 'id', `GET /faculty/member/${req.params.facultyId}`);
-        console.log("ID", id)
     } catch (e) {
         return res.status(404).json({error: e});
     }
