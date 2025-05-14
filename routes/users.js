@@ -469,6 +469,8 @@ router.route("/course/:courseId/:commentId/comment/delete").post(async (req, res
         return res.redirect("/login");
     }
     try {
+        if (!ObjectId.isValid(req.params.courseId)) throw new Error("Invalid course id");
+        if (!ObjectId.isValid(req.params.commentId)) throw new Error("Invalid comment id");
         const userId = req.session.user.userId
         const userCollection = await users()
         const commentsCollection = await comments()
@@ -533,6 +535,13 @@ router.route("/course/view/:courseId").get(async (req, res) => {
         return res.redirect("/login");
     }
     try {
+
+        if (!courseId) throw `getCourseById(): No value for id`;
+        if (typeof courseId !== 'string') throw  `Course id is not of type \'string\'`;
+        courseId = courseId.trim();
+        if (courseId.length === 0) throw `Course id cannot consist of just spaces`;
+        if (!ObjectId.isValid(id)) throw `Course id is an invalid objectID`;
+
         const course = await getCourseById(req.params.courseId);
         const userId = req.session.user.userId
         const courseComment = await getAllCommentsByCourseId(req.params.courseId)
@@ -645,6 +654,8 @@ router.route("/course/add/:courseId").post(async (req, res) => {
 
     try {
         if (!req.body.scheduleSelect) throw 'No schedule selected';
+        if (typeof(req.body.scheduleSelect) != 'string') throw 'Invalid schedule name';
+
         await addToSchedule(req.body.scheduleSelect, req.params.courseId, req.session);
         return res.redirect(`/course/view/${req.params.courseId}?schedule=${encodeURIComponent(req.body.scheduleSelect)}`)
     }
@@ -659,6 +670,8 @@ router.route("/course/remove/:courseId").post(async (req, res) => {
     }
 
     try {
+        if (!req.body.scheduleSelect) throw 'No schedule selected';
+        if (typeof(req.body.scheduleSelect) != 'string') throw 'Invalid schedule name';
         await removeFromSchedule(req.body.scheduleSelect, req.params.courseId, req.session);
         return res.redirect(`/course/view/${req.params.courseId}?schedule=${encodeURIComponent(req.body.scheduleSelect)}`);
     }   
@@ -673,6 +686,8 @@ router.route("/schedules/delete/:name").post(async (req, res) => {
     }
 
     try {
+        if (!req.params.name) throw 'No name provided';
+        if (typeof(req.params.name) != 'string') throw 'Name not a string';
         await removeSchedule(req.params.name, req.session);
         return res.redirect('/schedules')
     }
@@ -687,6 +702,7 @@ router.route("/schedules/new").post(async (req, res) => {
     }
 
     try {
+        if (!req.body.scheduleName || typeof(req.body.scheduleName) != 'string') throw 'Invalid schedule name';
         await addSchedule({
             name: req.body.scheduleName,
             courses: []
