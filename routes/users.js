@@ -662,7 +662,7 @@ router.route("/course/add/:courseId").post(async (req, res) => {
 
     try {
         req.body.scheduleSelect = xss(req.body.scheduleSelect)
-        req.body.scheduleSelect = xss(req.params.courseId)
+        req.params.courseId = xss(req.params.courseId)
         if (!req.body.scheduleSelect) throw 'No schedule selected';
         if (typeof(req.body.scheduleSelect) != 'string') throw 'Invalid schedule name';
 
@@ -681,7 +681,7 @@ router.route("/course/remove/:courseId").post(async (req, res) => {
 
     try {
         req.body.scheduleSelect = xss(req.body.scheduleSelect)
-        req.body.scheduleSelect = xss(req.params.courseId)
+        req.params.courseId = xss(req.params.courseId)
         if (!req.body.scheduleSelect) throw 'No schedule selected';
         if (typeof(req.body.scheduleSelect) != 'string') throw 'Invalid schedule name';
         await removeFromSchedule(req.body.scheduleSelect, req.params.courseId, req.session);
