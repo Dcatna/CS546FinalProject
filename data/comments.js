@@ -239,11 +239,11 @@ export const deleteFacultyComment = async (f_id, commentId, userId) => {
 export const addCourseSectionComment = async (course_id, userId, title, content, rating) => {
     let func_sig = 'addCourseSectionComment()';
     course_id = id_checker(course_id, 'course_id', func_sig);
-    userId = str_checker(userId, 'userId', 'addFacultyComment()');
-    title = title_checker(title, 'title', 'addFacultyComment()');
-    content = str_checker(content, 'content', 'addFacultyComment()');
-    num_checker(rating, 'rating', 'addFacultyComment()');
-    if (rating < 0 || rating > 5) throw `addFacultyComment(): rating cannot be less than 0 or greater than 5`;
+    userId = str_checker(userId, 'userId', func_sig);
+    title = title_checker(title, 'title', func_sig);
+    content = str_checker(content, 'content', func_sig);
+    num_checker(rating, 'rating', func_sig);
+    if (rating < 0 || rating > 5) throw `${func_sig}: rating cannot be less than 0 or greater than 5`;
 
     let new_comment = {
         // user_id: new Object(user_id),
