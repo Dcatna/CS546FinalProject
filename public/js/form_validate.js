@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 error.hidden = false
                 return
             }
-            if(typeof userId !== 'string' || !/^[A-Za-z0-9]{5,10}$/.test(userId.trim())) {
+            if(typeof userId !== 'string' || !/^[A-Za-z0-9]{5,20}$/.test(userId.trim())) {
                 e.preventDefault()
                 error.textContent = "invalid userid"
                 error.hidden = false
