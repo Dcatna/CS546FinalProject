@@ -62,13 +62,13 @@ router.route("/register").get(async (req, res) => {
     
 
     try {
-        if(!userId || typeof userId !== "string" || !/^[A-Za-z0-9]{5,20}$/.test(userId.trim())) { //prolly jsut gonna check objectid too 
+        if(!username || typeof username !== "string" || !/^[A-Za-z0-9]{5,20}$/.test(username.trim())) { //prolly jsut gonna check objectid too 
             throw new Error("invalid userId")
         }
         if(!firstName || typeof firstName !== "string" || !lastName || typeof lastName !== "string") {
             throw new Error("invalid first or last name")
         }
-        if(!emailAddr || typeof emailAddr !== "string" || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailAddr)) {
+        if(!email || typeof email !== "string" || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
             throw new Error("invalid email address")
         }
         if(!password || typeof password !== "string" || !/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)) {
@@ -483,6 +483,8 @@ router.route("/course/:courseId/:commentId/comment/delete").post(async (req, res
         return res.redirect("/login");
     }
     try {
+        if (!ObjectId.isValid(req.params.courseId)) throw new Error("Invalid course id");
+        if (!ObjectId.isValid(req.params.commentId)) throw new Error("Invalid comment id");
         const userId = req.session.user.userId
         const userCollection = await users()
         const commentsCollection = await comments()
@@ -547,7 +549,16 @@ router.route("/course/view/:courseId").get(async (req, res) => {
         return res.redirect("/login");
     }
     try {
+<<<<<<< HEAD
         const course = await getCourseById(xss(req.params.courseId));
+=======
+
+        if (!req.params.courseId) throw `getCourseById(): No value for id`;
+        if (typeof req.params.courseId !== 'string') throw  `Course id is not of type \'string\'`;
+        if (!ObjectId.isValid(req.params.courseId)) throw `Course id is an invalid objectID`;
+
+        const course = await getCourseById(req.params.courseId);
+>>>>>>> 8af28bbfbf91459150765f5f6066bb6443c094ac
         const userId = req.session.user.userId
         const courseComment = await getAllCommentsByCourseId(xss(req.params.courseId))
 
@@ -661,6 +672,8 @@ router.route("/course/add/:courseId").post(async (req, res) => {
         req.body.scheduleSelect = xss(req.body.scheduleSelect)
         req.body.scheduleSelect = xss(req.body.courseId)
         if (!req.body.scheduleSelect) throw 'No schedule selected';
+        if (typeof(req.body.scheduleSelect) != 'string') throw 'Invalid schedule name';
+
         await addToSchedule(req.body.scheduleSelect, req.params.courseId, req.session);
         return res.redirect(`/course/view/${req.params.courseId}?schedule=${encodeURIComponent(req.body.scheduleSelect)}`)
     }
@@ -675,8 +688,13 @@ router.route("/course/remove/:courseId").post(async (req, res) => {
     }
 
     try {
+<<<<<<< HEAD
         req.body.scheduleSelect = xss(req.body.scheduleSelect)
         req.body.scheduleSelect = xss(req.body.courseId)
+=======
+        if (!req.body.scheduleSelect) throw 'No schedule selected';
+        if (typeof(req.body.scheduleSelect) != 'string') throw 'Invalid schedule name';
+>>>>>>> 8af28bbfbf91459150765f5f6066bb6443c094ac
         await removeFromSchedule(req.body.scheduleSelect, req.params.courseId, req.session);
         return res.redirect(`/course/view/${req.params.courseId}?schedule=${encodeURIComponent(req.body.scheduleSelect)}`);
     }   
@@ -691,6 +709,8 @@ router.route("/schedules/delete/:name").post(async (req, res) => {
     }
 
     try {
+        if (!req.params.name) throw 'No name provided';
+        if (typeof(req.params.name) != 'string') throw 'Name not a string';
         await removeSchedule(req.params.name, req.session);
         return res.redirect('/schedules')
     }
@@ -705,6 +725,7 @@ router.route("/schedules/new").post(async (req, res) => {
     }
 
     try {
+        if (!req.body.scheduleName || typeof(req.body.scheduleName) != 'string') throw 'Invalid schedule name';
         await addSchedule({
             name: req.body.scheduleName,
             courses: []
