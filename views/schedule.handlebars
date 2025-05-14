@@ -1,3 +1,4 @@
+{{#each schedules}}
 <h1>{{name}}</h1>
 
 <form action="/schedules/csv/{{name}}" method="GET" style="display: inline">
@@ -5,6 +6,9 @@
 </form>
 <form action="/schedules/calendar/{{name}}" method="GET" style="display: inline">
     <input type="submit" name="Export to Google Calendar" value="Export to Google Calendar">
+</form>
+<form onsubmit="confirmDeletion(event)" action="/schedules/delete/{{name}}" method="POST" style="display: inline">
+    <input type="submit" name="Delete Schedule" value="Delete Schedule">
 </form>
 {{> schedule}}
 {{#if hasAsyncClass}}
@@ -17,3 +21,8 @@
   {{/each}}
 </ul>
 {{/if}}
+{{/each}}
+
+{{#unless schedules}}
+<h1>No Schedules Found</h1>
+{{/unless}}

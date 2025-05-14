@@ -25,6 +25,12 @@ Handlebars.registerHelper("is_user", (userId, curr_user, options) => {
   
 });
 
+Handlebars.registerHelper('ifEquals', function(arg1, arg2, options) {
+    return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
+});
+
+
+
 app.use(
   session({
     secret: "This is a secret.. shhh don't tell anyone",
