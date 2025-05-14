@@ -27,7 +27,7 @@ const num_checker = (num, num_name, func_sig) => {
     if (isNaN(num)) throw `${func_sig}: ${num_name} is of type \'NaN\'`;
 }
 
-const new_date = (time) => {
+export const new_date = (time) => {
     let date = new Date();
     let h = date.getHours();
     let min = date.getMinutes();
@@ -219,7 +219,7 @@ export const deleteFacultyComment = async (f_id, commentId, userId) => {
     );
     if (!deleted_comment_info) throw new Error(`deleteFacultyComment(): Could not delete comment with id ${commentId}`);
 
-    const user_delete_comment_info = await await usersCollection.updateOne(
+    const user_delete_comment_info = await usersCollection.updateOne(
         { userId: userId },
         {
             $pull: {
@@ -379,6 +379,29 @@ export const getAllCommentsByCourseName = async (course_name) => {
     }
 
     return course_comments;
+}
+
+export const getAllCommentsByCourseId = async (courseId) => {
+
+    const courseCollection = await courses()
+    const commentCollection = await comments()
+
+    const course = await courseCollection.findOne(
+        {_id: new ObjectId(courseId)}
+    )
+
+    if (!course) {
+        throw new Error("Course not found")
+    }
+
+    console.log(course)
+
+    const comment = await commentCollection
+    .find({ _id: { $in: course.comments.map(id => new ObjectId(id)) } })
+    .toArray();
+
+    return comment
+
 }
 
 export const getOverallCourseRating = async (course_name) => {

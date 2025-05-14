@@ -3,32 +3,36 @@
 <em>Location:</em> {{location}}<br>
 <em>Meeting Pattern:</em> {{days}} {{time}}
 
+
 {{#if comments}}
 <h2>Comments:</h2>
+
 <ul>
-    {{#each comments as |comment|}}    
+    {{#each comments as |comment|}}
+    
     <li>
         <h3>{{title}}</h3>
         <p>{{content}}</p>
         <a href="/profile/{{userId}}">{{userId}}</a>
         <em>{{date}}</em>
 
-        {{#is_user userId ../curr_user}}
-            <form action="/course/view/{{@root.id}}/comment/{{comment._id}}/delete" method="POST">
+        {{#ifEquals @root.userId comment.userId}}
+            <form action="/course/{{@root._id}}/{{comment._id}}/comment/delete" method="POST">
             <button type="submit">
                 DELETE
             </button>
             </form>
 
-        {{/is_user}}
+        {{/ifEquals}}
     </li>
     {{/each}}
 </ul>
 {{/if}}
 
-<form action="/course/view/{{_id}}/comment" method="GET" id="course-comment">
+<form action="/course/{{@root._id}}/comment" method="GET" id="faculty-comment">
     <input type="submit" value="Comment">
 </form>
+
 
 <h2>View in Schedule:</h2>
 
