@@ -324,7 +324,7 @@ router.get('/search/results', async (req, res) => {
     query = xss(query);
     year = xss(year);
     semester = xss(semester);
-    level = xss(level);
+    //level = xss(level);
     format = xss(format);
     professor = xss(professor);
   
