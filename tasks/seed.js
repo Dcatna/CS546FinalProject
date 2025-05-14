@@ -118,7 +118,7 @@ const user_seed = async () => {
 
     // will change addCourseSectionComment() similarly
     const comment2 = await createComment("JakeF", "Solid Course FR", "Doesnt move too fast and assignments are interesting", 4)
-    await addCourseSectionComment(courseId, comment2._id.toString())
+    await addCourseSectionComment(courseId, comment2._id)
 
 }
 

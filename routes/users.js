@@ -2,11 +2,14 @@ import { Router } from "express";
 import { ObjectId } from "mongodb";
 import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById, toggleUserPrivacyById, addSchedule, removeSchedule, getAllUsers } from "../data/users.js";
 import { getCourseById, unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, calendarExport, conflicts, addToSchedule, removeFromSchedule } from "../data/courses.js";
+import {createComment, addCourseSectionComment, getAllCommentsByCourseId} from "../data/comments.js"
 import { getAllComments } from "../data/comments.js";
+import { new_date } from "../data/comments.js";
 import multer from 'multer';
 import { Readable } from 'stream';
 import csv from 'csv-parser';
-import { type } from "os";
+import { users, courses, comments } from "../config/mongoCollections.js";
+
 
 const storage = multer.memoryStorage()
 const upload = multer({ storage })
@@ -75,9 +78,13 @@ router.route("/login").get(async (req, res) => {
 })
 
 router.route("/profile/:userId").get(async (req, res) => {
-    const targetUserId = req.params.userId
-
+    
     try {
+        if(!req.session || !req.session.user) {
+            return res.redirect("/login");
+        }
+        const targetUserId = req.params.userId
+
         const user = await getUserProfileById(targetUserId)
         const viewerId = req.session.user?.userId
         const isOwner = viewerId === user.userId        
@@ -337,12 +344,157 @@ router.route("/schedules/calendar/:name").get(async (req, res) => {
     }
 })
 
+router.route("/course/:courseId/comment").get( async (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+    try {
+        const courseId = req.params.courseId
+        res.render("courseComment", {
+            courseId: courseId
+        })
+
+    } catch (e) {
+        res.status(400).render('error', {message: e.message});
+    }
+})
+
+router.route("/course/:courseId/comment/create").post(async (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+    try {
+        const userId = req.session.user.userId
+        const userCollection = await users()
+        const commentsCollection = await comments()
+        const courseCollection = await courses()
+
+        const comment = {
+            userId: userId,
+            title: req.body.title,
+            content: req.body.content,
+            rating: Number(req.body.rating),
+            for_id: new ObjectId(req.params.courseId),
+            date: new_date(true),
+            for: "courses"
+        }
+        Object.values(comment).forEach((com) => {
+            if(!com) {
+                return res.status(400).redirect(req.get("Referer") || "/")
+            }
+        })
+
+        const inserted = await commentsCollection.insertOne(comment)
+        if (!inserted.acknowledged) {
+            return res.status(500).redirect(req.get("Referer") || "/")
+        }
+
+        await userCollection.findOneAndUpdate(
+            {userId: userId},
+            {$push: {"comments": inserted.insertedId}}
+        )
+
+        const courseComments = await courseCollection.findOneAndUpdate(
+            {_id: new ObjectId(req.params.courseId)},
+            {$push: {"comments": inserted.insertedId}}
+        )
+        let newRating = 0
+        if (courseComments.comments.length === 0) {
+            newRating = Number(req.body.rating)
+            
+        } else {
+            newRating = Math.floor( (courseComments.rating + Number(req.body.rating) ) / 2)
+        }
+
+        await courseCollection.updateOne(
+                {_id: new ObjectId(req.params.courseId)},
+                {$set: {rating: newRating}}
+            )
+
+
+        res.status(200).redirect(`/course/view/${req.params.courseId}`)
+
+    } catch (e) {
+        res.status(400).render('error', {message: e.message});
+    }
+}) 
+
+router.route("/course/:courseId/:commentId/comment/delete").post(async (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+    try {
+        const userId = req.session.user.userId
+        const userCollection = await users()
+        const commentsCollection = await comments()
+        const courseCollection = await courses()
+
+        await userCollection.findOneAndUpdate(
+            {userId: userId},
+            {
+                $pull: {
+                    comments: new ObjectId(req.params.commentId)
+                }
+            }
+        )
+
+        const courseComments = await courseCollection.findOneAndUpdate(
+            {_id: new ObjectId(req.params.courseId)},
+            {
+                $pull: {
+                    comments: new ObjectId(req.params.commentId)
+                }
+            }
+        )
+
+        const comment = await commentsCollection.findOne(
+            {_id: new ObjectId(req.params.commentId)}
+        )
+
+        /*
+            n = og num ratings
+            avg = og average
+            r = rating to be removed
+            new_avg = ((n * avg) - r) / n -1
+        */
+       console.log(req.params, "PARAMS")
+       console.log(courseComments, "SDFSDF")
+
+       const n = courseComments.comments.length
+       let newRating = 0
+       if (n <= 1) {
+            newRating = 0
+       } else {
+            newRating = Math.floor( ((n * courseComments.rating) - comment.rating) / (n - 1) )
+       }
+        await courseCollection.updateOne(
+            {_id: new ObjectId(req.params.courseId)},
+            {$set: {rating: newRating}}
+        )
+
+        await commentsCollection.deleteOne(
+            {_id: new ObjectId(req.params.commentId)}
+        )
+
+        res.status(200).redirect(`/course/view/${req.params.courseId}`)
+
+
+    } catch (e) {
+        res.status(400).render('error', {message: e.message});
+    }
+
+})
+
 router.route("/course/view/:courseId").get(async (req, res) => {
     if(!req.session || !req.session.user) {
         return res.redirect("/login");
     }
     try {
         const course = await getCourseById(req.params.courseId);
+        const userId = req.session.user.userId
+        console.log(req.params.courseId)
+        const courseComment = await getAllCommentsByCourseId(req.params.courseId)
+
         if (!course) throw 'Course not found';
         
         let schedules = await unpackSchedules(req.session.user.schedules);
@@ -355,7 +507,7 @@ router.route("/course/view/:courseId").get(async (req, res) => {
             return { name: schedule.name, sections: sections, conflicting: conflicts(sections), alreadyContains: alreadyContains, selected: (schedule.name == selectedSchedule)};
         });
 
-        res.render('course', {session: req.session, ...course, schedules: schedules});
+        res.render('course', {...course, schedules: schedules, comments: courseComment, userId: userId});
     }
     catch (e){
         res.status(400).render('error', {message: e, session: req.session});
