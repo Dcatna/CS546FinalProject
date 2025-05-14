@@ -1,4 +1,4 @@
-import { faculty, courses, users } from "../config/mongoCollections.js";
+import { faculty, courses, users, comments } from "../config/mongoCollections.js";
 import { closeConnection } from "../config/mongoConnection.js";
 import facultyData from "./new_faculty.json" with {type: 'json'};   // with {type: 'json'} bc of error "'file/.../faculty.json' needs an import attribute of 'type: json'" and assert wont work either
 import coursesData from "./courses.json" with {type: 'json'};   // with {type: 'json'} bc of error "'file/.../faculty.json' needs an import attribute of 'type: json'" and assert wont work either
@@ -17,9 +17,11 @@ const __dirname = path.dirname(__filename)
 const facultyCollection = await faculty();
 const coursesCollection = await courses();
 const usersCollection = await users();
+const commentsCollection = await comments();
 await facultyCollection.drop(); // reset
 await coursesCollection.drop(); // reset
 await usersCollection.drop(); // reset
+await commentsCollection.drop(); // reset
 
 
 const faculty_seed = async (f_data) => {
@@ -112,13 +114,21 @@ const user_seed = async () => {
 
     // Perhaps change register to return the user object? Or smth like {registrationCompleted: true, user: user} or whatever
     // I changed addFacultyComment() to do the creation and addition in the same function as opposed to separately
-    const comment1 = await addFacultyComment(profId, "OliviaJ", "BEST PROF!!", "made concepts easy to understand and is always available!", 5)
+    try {
+        const comment1 = await addFacultyComment(profId, "OliviaJ", "BEST PROF!!", "made concepts easy to understand and is always available!", 5)
+    } catch (e) {
+        console.log(e);
+    }
     // const comment1 = await createComment("OliviaJ", "BEST PROF!!", "made concepts easy to understand and is always available!", 5)
     // await addFacultyComment(profId, comment1._id.toString())
 
     // will change addCourseSectionComment() similarly
-    const comment2 = await createComment("JakeF", "Solid Course FR", "Doesnt move too fast and assignments are interesting", 4)
-    await addCourseSectionComment(courseId, comment2._id)
+    try {
+        // const comment2 = await createComment("JakeF", "Solid Course FR", "Doesnt move too fast and assignments are interesting", 4)
+        const comment2 = await addCourseSectionComment(courseId, "JakeF", "Solid Course FR", "Doesnt move too fast and assignments are interesting", 4);
+    } catch (e) {
+        console.log(e);
+    }
 
 }
 
