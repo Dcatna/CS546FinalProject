@@ -5,7 +5,7 @@ import { courses, users } from "../config/mongoCollections.js";
 
 export async function register(userId, firstName, lastName, emailAddr, password) { //returns the valid user object
     //basic checks
-    if(!userId || typeof userId !== "string" ) { //prolly jsut gonna check objectid too 
+    if(!userId || typeof userId !== "string" || !/^[A-Za-z0-9]{5,20}$/.test(userId.trim())) { //prolly jsut gonna check objectid too 
         throw new Error("invalid userId")
     }
     if(!firstName || typeof firstName !== "string" || !lastName || typeof lastName !== "string") {
@@ -21,12 +21,12 @@ export async function register(userId, firstName, lastName, emailAddr, password)
     //register logic
 
     const userCollection = await users()
-    const duplicate = await userCollection.findOne({ userId: userId})
+    const duplicate = await userCollection.findOne({ userId: userId.toLowerCase()})
     
     if(duplicate) {
       throw new Error("duplicate userid")
     }
-    const dupliacteEmail = await userCollection.findOne({emailAddr: emailAddr})
+    const dupliacteEmail = await userCollection.findOne({emailAddr: emailAddr.toLowerCase()})
     if(dupliacteEmail) {
         throw new Error("duplicate email address")
     }
@@ -45,9 +45,9 @@ export async function register(userId, firstName, lastName, emailAddr, password)
     const user = {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        userId: userId,
+        userId: userId.toLowerCase(),
         password: hashedPass,
-        emailAddr: emailAddr,
+        emailAddr: emailAddr.toLowerCase(),
         createdAt: currDay,
         schedules: [],
         profileImage: null,
@@ -73,7 +73,7 @@ export async function logIn(emailAddr, password) {
     }
 
     const userCollection = await users()
-    const user = await userCollection.findOne({ emailAddr: emailAddr })
+    const user = await userCollection.findOne({ emailAddr: emailAddr.toLowerCase() })
     if(!user) {
         throw new Error("invalid email or password")
     }

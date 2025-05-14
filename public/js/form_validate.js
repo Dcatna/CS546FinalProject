@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const signup = document.getElementById("signup-form")
     const signin = document.getElementById("signin-form")
     if(signup) {
+        e.preventDefault();
         const error = document.getElementById("error-signup")
         signup.addEventListener("submit", (e) => {
             const firstName = document.getElementById('firstName').value.trim();
@@ -47,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 error.hidden = false
                 return
             }
-            if(typeof userId !== 'string' || !/^[A-Za-z0-9]{5,10}$/.test(userId.trim())) {
+            if(typeof userId !== 'string' || !/^[A-Za-z0-9]{5,20}$/.test(userId.trim())) {
                 e.preventDefault()
                 error.textContent = "invalid userid"
                 error.hidden = false
@@ -72,12 +73,30 @@ document.addEventListener("DOMContentLoaded", () => {
                 return
             }
 
-            error.hidden = true;
-            error.textContent = "";
+        //AJAX request
+        fetch("/signup", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ firstName, lastName, userId, email, password })
+        })
+        .then(res => {
+            if (!res.ok) return res.json().then(data => { throw data });
+            return res.json();
+        })
+        .then(data => {
+            window.location.href = `/login`;
+        })
+        .catch(err => {
+            error.textContent = err?.error || "Signup failed";
+            error.hidden = false;
+        });
         })
     }
 
     if (signin) {
+        e.preventDefault();
         const error = document.getElementById("error-signin")
         signin.addEventListener("submit", (e) => {
             console.log("HEL")
@@ -102,8 +121,25 @@ document.addEventListener("DOMContentLoaded", () => {
                 error.hidden = false
                 return
             }
-            error.hidden = true;
-            error.textContent = "";
+            //AJAX request
+            fetch("/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email, password })
+            })
+            .then(res => {
+                if (!res.ok) return res.json().then(data => { throw data });
+                return res.json();
+            })
+            .then(data => {
+                window.location.href = `/users/${data.userId}`;
+            })
+            .catch(err => {
+                error.textContent = err?.error || "Login failed";
+                error.hidden = false;
+            });
         })
     }
 
@@ -197,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
             
             if (!rating) {
                 event.preventDefault();
-                err.textrating = `Error: No value for rating field`;
+                err.textContent = `Error: No value for rating field`;
                 err.hidden = false;
                 return;
             }
@@ -229,10 +265,52 @@ document.addEventListener("DOMContentLoaded", () => {
             
         })
     }
-})
+    const searchForm = document.getElementById("searchForm");
+    const errorDiv = document.getElementById("error");
+
+    if (searchForm) {
+        searchForm.addEventListener("submit", (e) => {
+        e.preventDefault(); 
+
+        const query = document.getElementById("query").value.trim();
+        const professor = document.getElementById("professor").value.trim();
+        const levels = Array.from(document.querySelectorAll("input[name='level']:checked")).map(cb => cb.value);
+
+        if (!query && !professor && levels.length === 0) {
+            errorDiv.textContent = "Please enter a class name, professor, or select a class level.";
+            return;
+        }
+
+        errorDiv.textContent = ""; 
+
+        const params = new URLSearchParams();
+        if (query) params.append("query", query);
+        if (professor) params.append("professor", professor);
+        levels.forEach(level => params.append("level", level));
+
+        fetch(`/search/results?${params.toString()}`)
+            .then(res => {
+                if (!res.ok) throw new Error("Search failed.");
+                return res.text(); 
+            })
+            .then(html => {
+                const resultsContainer = document.getElementById("search-results");
+                if (resultsContainer) {
+                    resultsContainer.innerHTML = html;
+                } else {
+                    window.location.href = `/search/results?${params.toString()}`;
+                }
+            })
+            .catch(err => {
+                errorDiv.textContent = err.message || "Search failed.";
+            });
+        });
+    };
+});
 const confirmDeletion = (event) => {
     const confirmed = confirm("Are you sure you want to delete this schedule?");
     if (!confirmed) {
         event.preventDefault(); // Stop form from submitting
     }
 }
+

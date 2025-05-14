@@ -27,23 +27,20 @@
 
 {{#if comments}}
 <h2>Comments:</h2>
-<ul>
+<ul style="list-style-type: none; padding: 0;">
     {{#each comments as |comment|}}
-    
     <li>
-        <h3>{{title}}</h3>
-        <p>{{content}}</p>
-        <a href="/profile/{{userId}}">{{userId}}</a>
-        <em>{{date}}</em>
+        <div class="comment-box">
+            <h3 class="comment-title">{{comment.title}}</h3>
+            <p class="comment-rating">Posted by <a href="/profile/{{comment.userId}}">{{comment.userId}}</a> on <em>{{comment.date}}</em></p>
+            <p class="comment-content">{{comment.content}}</p>
 
-        {{#is_user userId ../curr_user}}
+            {{#is_user comment.userId ../curr_user}}
             <form action="/faculty/member/{{@root.id}}/comment/{{comment._id}}/delete" method="POST">
-            <button type="submit">
-                DELETE
-            </button>
+                <button type="submit">DELETE</button>
             </form>
-
-        {{/is_user}}
+            {{/is_user}}
+        </div>
     </li>
     {{/each}}
 </ul>

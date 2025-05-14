@@ -36,12 +36,7 @@ export const searchByClass = async (name, filters = {}) => {
         });
     }
     const finalQuery = query.$and.length > 0 ? query : {};
-    // if(filters.year){
-    //   query.$and.push({"Year": filters.year});
-    // }
-    // if(filters.semester){
-    //   query.$and.push({"Semester": filters.semester});
-    // }
+
     try {
       const courses = await classColl.find(finalQuery).toArray();
       let filteredCourses = courses;
@@ -65,12 +60,7 @@ export const searchByProfessor = async (name, filters = {}) => {
   }
 
   const finalQuery = query.$and.length > 0 ? query : {};
-  // if(filters.year){
-  //   query.$and.push({"Year": filters.year});
-  // }
-  // if(filters.semester){
-  //   query.$and.push({"Semester": filters.semester});
-  // }
+
   try {
     const courses = await classColl.find(finalQuery).toArray();
     let filteredCourses = courses;

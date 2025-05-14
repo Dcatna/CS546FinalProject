@@ -103,8 +103,8 @@ const user_seed = async () => {
     const oliviaPfp = fs.readFileSync(path.join(__dirname, "seed_pfps/oliviapfp.jpg"))
     const jakePfp = fs.readFileSync(path.join(__dirname, "seed_pfps/jakef.jpg"))
 
-    await setProfilePicture("OliviaJ", oliviaPfp, "image/jpeg")
-    await setProfilePicture("JakeF", jakePfp, "image/jpeg")
+    await setProfilePicture("oliviaj", oliviaPfp, "image/jpeg")
+    await setProfilePicture("jakef", jakePfp, "image/jpeg")
 
     //add sum comments
     const faculty = await getAllFaculty()
@@ -115,7 +115,7 @@ const user_seed = async () => {
     // Perhaps change register to return the user object? Or smth like {registrationCompleted: true, user: user} or whatever
     // I changed addFacultyComment() to do the creation and addition in the same function as opposed to separately
     try {
-        const comment1 = await addFacultyComment(profId, "OliviaJ", "BEST PROF!!", "made concepts easy to understand and is always available!", 5)
+        const comment1 = await addFacultyComment(profId, "oliviaj", "BEST PROF!!", "made concepts easy to understand and is always available!", 5)
     } catch (e) {
         console.log(e);
     }
@@ -125,7 +125,7 @@ const user_seed = async () => {
     // will change addCourseSectionComment() similarly
     try {
         // const comment2 = await createComment("JakeF", "Solid Course FR", "Doesnt move too fast and assignments are interesting", 4)
-        const comment2 = await addCourseSectionComment(courseId, "JakeF", "Solid Course FR", "Doesnt move too fast and assignments are interesting", 4);
+        const comment2 = await addCourseSectionComment(courseId, "jakef", "Solid Course FR", "Doesnt move too fast and assignments are interesting", 4);
     } catch (e) {
         console.log(e);
     }

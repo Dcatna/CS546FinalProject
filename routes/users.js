@@ -2,7 +2,7 @@ import { Router } from "express";
 import { ObjectId } from "mongodb";
 import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById, toggleUserPrivacyById, addSchedule, removeSchedule, getAllUsers } from "../data/users.js";
 import { getCourseById, unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, calendarExport, conflicts, addToSchedule, removeFromSchedule } from "../data/courses.js";
-import {createComment, addCourseSectionComment, getAllCommentsByCourseId, getAllCommentsByCourseName, getOverallCourseRating} from "../data/comments.js"
+import {createComment, addCourseSectionComment, getAllCommentsByCourseId, getAllCommentsByCourseName, getOverallCourseRating, deleteCourseComment} from "../data/comments.js"
 import { getAllComments } from "../data/comments.js";
 import { new_date } from "../data/comments.js";
 import multer from 'multer';
@@ -53,10 +53,27 @@ router.route("/register").get(async (req, res) => {
     }
     res.render("signup", {session: req.session})
 }).post(async (req, res) => {
-    const {username, firstName, lastName, email, password} = req.body;
+    let {username, firstName, lastName, email, password} = req.body;
+    username = xss(username)
+    firstName = xss(firstName)
+    lastName = xss(lastName)
+    email = xss(email)
+    password = xss(password)
     
 
     try {
+        if(!userId || typeof userId !== "string" || !/^[A-Za-z0-9]{5,20}$/.test(userId.trim())) { //prolly jsut gonna check objectid too 
+            throw new Error("invalid userId")
+        }
+        if(!firstName || typeof firstName !== "string" || !lastName || typeof lastName !== "string") {
+            throw new Error("invalid first or last name")
+        }
+        if(!emailAddr || typeof emailAddr !== "string" || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailAddr)) {
+            throw new Error("invalid email address")
+        }
+        if(!password || typeof password !== "string" || !/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)) {
+            throw new Error("invalid password")
+        }
         const result = await register(username, firstName, lastName, email, password)
         if (result.registrationCompleted) {
             return res.redirect("/login")
@@ -80,17 +97,25 @@ router.route("/login").get(async (req, res) => {
     }
     res.render("signin", {session: req.session})
 }).post(async (req, res) => {
-    const {email, password} = req.body
+    let {email, password} = req.body
+    email = xss(email)
+    password = xss(password)
     //ill just do error checks in the form validation
 
     try {
+        if(!email || typeof email !== "string") {
+            throw new Error("invalid email address")
+        }
+        if (!password || typeof password !== "string") {
+            throw new Error("invalid password")
+        }
         const user = await logIn(email, password)
         req.session.user = {
             firstName: xss(user.firstName),
             lastName: xss(user.lastName),
             userId: xss(user.userId),
             createdAt: xss(user.createdAt),
-            schedules: xss(user.schedules)
+            schedules: user.schedules
         }
         return res.redirect(`/profile/${user.userId}`)
     } catch (e) {
@@ -205,7 +230,6 @@ router.route("/schedules").get(async (req, res) => {
         sections: getSectionTimes(schedule),
         hasAsyncClass: schedule.courses.some(course => !course.time)
     }));
-    console.log(schedules, "SDFSFDDFSDF")
     res.render("schedules", {
         session: req.session,
         schedules: schedules
@@ -252,7 +276,7 @@ router.route("/view/:scheduleId").get(async (req, res) => {
             schedules: [fullSchedule]
         });
     } catch (e) {
-        console.log(e.message, "SD")
+        console.log(e.message)
         res.status(500).redirect(req.get("Referer") || "/")
     }
 
@@ -330,7 +354,7 @@ router.post("/schedules/upload", upload.single("scheduleCSV"), async (req, res) 
         let schedule;
 
         if (!file) {
-            return res.status(400).send("no file")
+            return res.status(400).render('error', {message: 'No file recieved', session: req.session})
         }
 
         // Parse the CSV file
@@ -383,7 +407,8 @@ router.route("/course/:courseId/comment").get( async (req, res) => {
     try {
         const courseId = xss(req.params.courseId)
         res.render("courseComment", {
-            courseId: courseId
+            courseId: courseId,
+            session: req.session
         })
 
     } catch (e) {
@@ -401,6 +426,7 @@ router.route("/course/:courseId/comment/create").post(async (req, res) => {
         const commentsCollection = await comments()
         const courseCollection = await courses()
 
+        if (!ObjectId.isValid(req.params.courseId) || !courseCollection.findOne({_id: new ObjectId(req.params.courseId)})) throw new Error('That course does not exist')
         const comment = {
             userId: userId,
             title: xss(req.body.title),
@@ -410,6 +436,7 @@ router.route("/course/:courseId/comment/create").post(async (req, res) => {
             date: new_date(true),
             for: "courses"
         }
+        
         Object.values(comment).forEach((com) => {
             if(!com) {
                 return res.status(400).redirect(req.get("Referer") || "/")
@@ -489,8 +516,6 @@ router.route("/course/:courseId/:commentId/comment/delete").post(async (req, res
             r = rating to be removed
             new_avg = ((n * avg) - r) / n -1
         */
-    //    console.log(req.params, "PARAMS")
-    //    console.log(courseComments, "SDFSDF")
 
        const n = courseComments.comments.length
        let newRating = 0
@@ -524,7 +549,6 @@ router.route("/course/view/:courseId").get(async (req, res) => {
     try {
         const course = await getCourseById(xss(req.params.courseId));
         const userId = req.session.user.userId
-        console.log(xss(req.params.courseId))
         const courseComment = await getAllCommentsByCourseId(xss(req.params.courseId))
 
         if (!course) throw 'Course not found';
@@ -606,7 +630,6 @@ router.route("/course/view/:courseId/comment").get(async (req, res) => {
 });
 
 router.route("/course/view/:courseId/comment/:commentId/delete").post(async (req, res) => {
-    console.log("HELLOOOOO")
     let courseId, commentId;
     if(!req.session || !req.session.user) {
         return res.redirect("/login");
@@ -623,7 +646,6 @@ router.route("/course/view/:courseId/comment/:commentId/delete").post(async (req
 
     try {
         let deletedComment = await deleteCourseComment(courseId, userId, commentId);
-        console.log("DFELTE")
         return res.redirect(req.get("Referrer") || "/")
     } catch (e) {
         res.status(500).render('error', {message: e, session: req.session});
