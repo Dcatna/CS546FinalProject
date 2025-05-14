@@ -377,7 +377,7 @@ router.post("/schedules/upload", upload.single("scheduleCSV"), async (req, res) 
     }
     try {
         const userId = req.session.user.userId
-        const file = xss(req.file)
+        const file = req.file
         let schedule;
 
         if (!file) {
