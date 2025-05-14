@@ -4,6 +4,7 @@ import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileBy
 import { getCourseById, unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, calendarExport, conflicts, addToSchedule, removeFromSchedule } from "../data/courses.js";
 import {createComment, addCourseSectionComment, getAllCommentsByCourseId, getAllCommentsByCourseName, getOverallCourseRating, deleteCourseComment} from "../data/comments.js"
 import { getAllComments } from "../data/comments.js";
+import { getFacultyById } from "../data/faculty.js";
 import { new_date } from "../data/comments.js";
 import multer from 'multer';
 import { Readable } from 'stream';
@@ -129,38 +130,65 @@ router.route("/login").get(async (req, res) => {
 })
 
 router.route("/profile/:userId").get(async (req, res) => {
-    
     try {
-        if(!req.session || !req.session.user) {
+        if (!req.session || !req.session.user) {
             return res.redirect("/login");
         }
+        
         const targetUserId = xss(req.params.userId)
-
-        const user = await getUserProfileById(targetUserId)
-        const viewerId = req.session.user?.userId
-        const isOwner = viewerId === user.userId        
+        const user = await getUserProfileById(targetUserId);
+        
+        if (!user) {
+            throw new Error("User not found");
+        }
+        
+        const viewerId = req.session.user?.userId;
+        const isOwner = viewerId === user.userId;
+        
         if (!user.public && !isOwner) {
-          const referer = req.get("Referer") || "/"
-          return res.redirect(referer)
-        }      
+            const referer = req.get("Referer") || "/";
+            return res.redirect(referer);
+        }
+        
         let allComments = await getAllComments();
         let comments = allComments.filter(comment => comment.userId === user.userId);
 
+        const courseComments = [];
+        const facultyComments = [];
+
+        for (let comment of comments) {
+            if (comment.for === "courses") {
+                const course = await getCourseById((comment.for_id).toString());
+                console.log(course);
+                if (course) {
+                    courseComments.push({ comment, course });
+                }
+            } else if (comment.for === "faculty") {
+                const faculty = await getFacultyById((comment.for_id).toString());
+                if (faculty) {
+                    facultyComments.push({ comment, faculty });
+                }
+            }
+        }
         res.render("profile", {
-          session: req.session,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          userId: user.userId,
-          createdAt: user.createdAt,
-          schedules: user.schedules,
-          comments: comments,
-          isOwner: viewerId === user.userId,
-          public: user.public
-        })
+            session: req.session,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            userId: user.userId,
+            createdAt: user.createdAt,
+            schedules: user.schedules,
+            courseComments: courseComments,
+            facultyComments: facultyComments,
+            isOwner: viewerId === user.userId,
+            public: user.public
+        });
+
     } catch (e) {
-        return res.status(404).render("error", { message: e.message })
+        console.error(e); 
+        return res.status(404).render("error", { message: e.message });
     }
-})
+});
+
 
 router.route("/profile/toggle-privacy").post(async (req, res) => {
     try {

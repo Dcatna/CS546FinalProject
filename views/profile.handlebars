@@ -47,10 +47,9 @@
     </div>
   {{/if}}
 
-
   <div class="profile-tabs">
-  <button id="tab-schedules" class="active" onclick="showTab('schedules')">Schedules</button>
-  <button id="tab-comments" onclick="showTab('comments')">Comments</button>
+    <button id="tab-schedules" class="active" onclick="showTab('schedules')">Schedules</button>
+    <button id="tab-comments" onclick="showTab('comments')">Comments</button>
   </div>
 
   <div class="profile-content">
@@ -59,7 +58,7 @@
       {{#if schedules.length}}
         <ul>
           {{#each schedules}}
-            <a href="/view/{{this._id}}">{{this.name}}</a>
+            <li><a href="/view/{{this._id}}">{{this.name}}</a></li>
           {{/each}}
         </ul>
       {{else}}
@@ -69,16 +68,38 @@
 
     <div id="comments-tab" class="tab-panel" style="display: none;">
       <h3>Comments:</h3>
-      {{#if comments.length}}
-        {{#each comments}}
+
+      <!-- Check if there are no comments in either courseComments or facultyComments -->
+      {{#unless courseComments.length}}
+        {{#unless facultyComments.length}}
+          <p>No Comments Yet</p>
+        {{/unless}}
+      {{/unless}}
+
+      <!-- Render Course Comments if they exist -->
+      {{#if courseComments.length}}
+        <h4>Course Comments:</h4>
+        {{#each courseComments}}
           <div class="comment-box">
-            <h4 class="comment-title">{{this.title}}</h4>
-            <p class="comment-rating">Rating: {{this.rating}} / 5</p>
-            <p class="comment-content">{{this.content}}</p>
+            <h4 class="comment-title">{{this.comment.title}}</h4>
+            <p class="comment-rating">Rating: {{this.comment.rating}} / 5</p>
+            <p class="comment-content">{{this.comment.content}}</p>
+            <p>Commented on <a href="/course/view/{{this.course._id}}">{{this.course.course_section}}</a></p>
           </div>
         {{/each}}
-      {{else}}
-        <p>No Comments Yet</p>
+      {{/if}}
+
+      <!-- Render Faculty Comments if they exist -->
+      {{#if facultyComments.length}}
+        <h4>Faculty Comments:</h4>
+        {{#each facultyComments}}
+          <div class="comment-box">
+            <h4 class="comment-title">{{this.comment.title}}</h4>
+            <p class="comment-rating">Rating: {{this.comment.rating}} / 5</p>
+            <p class="comment-content">{{this.comment.content}}</p>
+            <p>Commented on <a href="/faculty/member/{{this.faculty._id}}">{{this.faculty.name}}</a></p>
+          </div>
+        {{/each}}
       {{/if}}
     </div>
   </div>
