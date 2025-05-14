@@ -2,7 +2,7 @@ import { Router } from "express";
 import { ObjectId } from "mongodb";
 import { register, logIn, getProfilePicture, setProfilePicture, getUserProfileById, toggleUserPrivacyById, addSchedule, removeSchedule, getAllUsers } from "../data/users.js";
 import { getCourseById, unpackSchedules, getSectionTimes, searchByClass, searchByProfessor, scheduleToCSV, calendarExport, conflicts, addToSchedule, removeFromSchedule } from "../data/courses.js";
-import {createComment, addCourseSectionComment, getAllCommentsByCourseId} from "../data/comments.js"
+import {createComment, addCourseSectionComment, getAllCommentsByCourseId, getAllCommentsByCourseName, getOverallCourseRating} from "../data/comments.js"
 import { getAllComments } from "../data/comments.js";
 import { new_date } from "../data/comments.js";
 import multer from 'multer';
@@ -14,6 +14,31 @@ import { users, courses, comments } from "../config/mongoCollections.js";
 const storage = multer.memoryStorage()
 const upload = multer({ storage })
 const router = Router()
+
+const str_checker = (str, str_name, func_sig) => {
+    if (!str) throw `${func_sig}: No value for ${str_name}`;
+    if (typeof str !== 'string') throw  `${func_sig}: ${str_name} is not of type \'string\'`;
+    str = str.trim();
+    if (str.length === 0) throw `${func_sig}: ${str_name} cannot consist of just spaces`;
+    return str;
+}
+
+const id_checker = (id, id_name, func_sig) => {
+    id = str_checker(id, id_name, func_sig);
+    if (!ObjectId.isValid(id)) throw `${func_sig}: ${id_name} is an invalid ObjectId`;
+    return id;
+}
+
+const title_checker = (title, title_name, func_sig) => {
+    title = str_checker(title, title_name, func_sig);
+    if (title.length < 3) throw `${func_sig}: ${title_name} must be at least 3 characters` // for things like 'wow' or 'WOW' no character restriction for things like 'Wow!' or whatever
+    return title;
+}
+const num_checker = (num, num_name, func_sig) => {
+    if (isNaN(parseFloat(num))) throw `${func_sig}: ${num_name} is not of type \'number\'`;
+    if (isNaN(num)) throw `${func_sig}: ${num_name} is of type \'NaN\'`;
+    return parseFloat(num);
+}
 
 router.route("/").get(async (req, res) => {
     // const user = req.session.user
@@ -507,12 +532,97 @@ router.route("/course/view/:courseId").get(async (req, res) => {
             return { name: schedule.name, sections: sections, conflicting: conflicts(sections), alreadyContains: alreadyContains, selected: (schedule.name == selectedSchedule)};
         });
 
-        res.render('course', {...course, schedules: schedules, comments: courseComment, userId: userId});
+        course.comments = await getAllCommentsByCourseName(course.course); // change course comments (at least for viewing the course page) to that of all the course comments bc it doesnt make much sense to have comments for a section that might not exist anymore
+        course.rating = await getOverallCourseRating(course.course);
+
+        res.render('course', {session: req.session, ...course, schedules: schedules, curr_user: req.session.user.userId, id: course._id.toString()});
+
+        // res.render('course', {...course, schedules: schedules, comments: courseComment, userId: userId});
     }
     catch (e){
         res.status(400).render('error', {message: e, session: req.session});
     }
 })
+router.route("/course/view/:courseId/comment").get(async (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+    let course, id;
+    try {
+        id = id_checker(req.params.courseId, 'id', `GET /faculty/member/${req.params.courseId}/comment`);
+    } catch (e) {
+        res.status(404).render('error', {message: e, session: req.session});
+    }
+    try {
+        course = await getCourseById(id);
+        res.render('comment', {session: req.session, title: `Comment: ${course.course_section}`, course_id: id.toString(), faculty: false});
+    } catch (e) {
+        res.status(500).render('error', {message: e, session: req.session});
+    }
+}).post(async (req, res) => {
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+    let userId, title, content, rating, courseId, course, upd_course_member;
+    let func_sig = `POST /course/view/${req.params.courseId}/comment`;
+    try {
+        if (!req.body || Object.keys(req.body).length === 0) throw `${func_sig}: request body cannot be empty`;
+        const keys = Object.keys(req.body);
+        if (keys.length > 3) throw `${func_sig}: request body cannot have more than 3 fields`;
+        keys.map((key) => {if ((key !== `title`) && (key !== `content`) && (key !== `rating`)) throw `${func_sig}: \'${key}\' is an invalid key`});
+        
+        // id = id_checker(req.session.id, '_id', func_sig);
+        userId = str_checker(req.session.user.userId, 'userId', func_sig);
+        title = title_checker(req.body.title, 'title', func_sig);
+        content = str_checker(req.body.content, 'content', func_sig);
+
+        rating = num_checker(req.body.rating, 'rating', func_sig);
+        if (rating < 0 || rating > 5) throw `${func_sig}: rating cannot be less than 0 or greater than 5`;
+
+        courseId = id_checker(req.params.courseId, 'courseId', func_sig);
+        try {
+            course = await getCourseById(courseId);
+        } catch (e) {
+            throw `${func_sig}: course with the id of ${req.params.courseId} does not exist`;
+        }
+    } catch (e) {
+        res.status(404).render('error', {message: e, session: req.session});
+    }
+
+    try {
+        upd_course_member = await addCourseSectionComment(courseId, userId, title, content, rating);
+        res.redirect(`/course/view/${courseId}`);
+    } catch (e) {
+        res.status(500).render('error', {message: e, session: req.session});
+    }
+    
+});
+
+router.route("/course/view/:courseId/comment/:commentId/delete").post(async (req, res) => {
+    console.log("HELLOOOOO")
+    let courseId, commentId;
+    if(!req.session || !req.session.user) {
+        return res.redirect("/login");
+    }
+    const userId = req.session.user.userId
+
+    let func_sig = `POST /faculty/member/${req.params.courseId}/comment/${req.params.commentId}/delete`
+    try {
+        courseId = id_checker(req.params.courseId, 'courseId', func_sig);
+        commentId = id_checker(req.params.commentId, 'commentId', func_sig);
+    } catch (e) {
+        res.status(404).render('error', {message: e, session: req.session});
+    }
+
+    try {
+        let deletedComment = await deleteCourseComment(courseId, userId, commentId);
+        console.log("DFELTE")
+        return res.redirect(req.get("Referrer") || "/")
+    } catch (e) {
+        res.status(500).render('error', {message: e, session: req.session});
+    }
+})
+
 router.route("/course/add/:courseId").post(async (req, res) => {
     if(!req.session || !req.session.user) {
         return res.redirect("/login");

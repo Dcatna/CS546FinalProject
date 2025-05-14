@@ -6,14 +6,14 @@
 <em>{{office}}</em>
 {{/if}}
 
-<h2>Rating: {{rating}}
-    <p>IDDDD {{id}}</p>
+<h2>Rating: {{rating}}</h2>
+    {{!-- <p>IDDDD {{id}}</p> --}}
 {{#if courses}}
 <h2>Course Sections:</h2>
 <ul>
     {{#each courses}}
     <li class="course-item">
-        <strong><a href="/course/{{_id}}">{{course_section}}</a></strong><br>
+        <strong><a href="/course/view/{{_id}}">{{course_section}}</a></strong><br>
         {{#if time}}
         <em>Time: </em>{{time}}<br>
         {{/if}}
@@ -24,9 +24,9 @@
     {{/each}}
 </ul>
 {{/if}}
+
 {{#if comments}}
 <h2>Comments:</h2>
-
 <ul>
     {{#each comments as |comment|}}
     
