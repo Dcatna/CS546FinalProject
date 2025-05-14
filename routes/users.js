@@ -159,7 +159,6 @@ router.route("/profile/:userId").get(async (req, res) => {
         for (let comment of comments) {
             if (comment.for === "courses") {
                 const course = await getCourseById((comment.for_id).toString());
-                console.log(course);
                 if (course) {
                     courseComments.push({ comment, course });
                 }
