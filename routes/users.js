@@ -549,16 +549,12 @@ router.route("/course/view/:courseId").get(async (req, res) => {
         return res.redirect("/login");
     }
     try {
-<<<<<<< HEAD
-        const course = await getCourseById(xss(req.params.courseId));
-=======
-
+        req.params.courseId = xss(req.params.courseId)
         if (!req.params.courseId) throw `getCourseById(): No value for id`;
         if (typeof req.params.courseId !== 'string') throw  `Course id is not of type \'string\'`;
         if (!ObjectId.isValid(req.params.courseId)) throw `Course id is an invalid objectID`;
 
         const course = await getCourseById(req.params.courseId);
->>>>>>> 8af28bbfbf91459150765f5f6066bb6443c094ac
         const userId = req.session.user.userId
         const courseComment = await getAllCommentsByCourseId(xss(req.params.courseId))
 
@@ -574,12 +570,8 @@ router.route("/course/view/:courseId").get(async (req, res) => {
             return { name: schedule.name, sections: sections, conflicting: conflicts(sections), alreadyContains: alreadyContains, selected: (schedule.name == selectedSchedule)};
         });
 
-        // course.comments = await getAllCommentsByCourseName(course.course); // change course comments (at least for viewing the course page) to that of all the course comments bc it doesnt make much sense to have comments for a section that might not exist anymore
-        // course.rating = await getOverallCourseRating(course.course);
-
-        // res.render('course', {session: req.session, ...course, schedules: schedules, curr_user: req.session.user.userId, id: course._id.toString()});
-
-        res.render('course', {...course, schedules: schedules, comments: courseComment, userId: userId});
+        res.render('course', {...course, schedules: schedules, comments: courseComment, userId: userId, session: req.session});
+        // res.render('course', {...course, schedules: schedules, comments: courseComment, userId: userId});
     }
     catch (e){
         res.status(400).render('error', {message: e, session: req.session});
@@ -670,7 +662,7 @@ router.route("/course/add/:courseId").post(async (req, res) => {
 
     try {
         req.body.scheduleSelect = xss(req.body.scheduleSelect)
-        req.body.scheduleSelect = xss(req.body.courseId)
+        req.body.scheduleSelect = xss(req.params.courseId)
         if (!req.body.scheduleSelect) throw 'No schedule selected';
         if (typeof(req.body.scheduleSelect) != 'string') throw 'Invalid schedule name';
 
@@ -688,13 +680,10 @@ router.route("/course/remove/:courseId").post(async (req, res) => {
     }
 
     try {
-<<<<<<< HEAD
         req.body.scheduleSelect = xss(req.body.scheduleSelect)
-        req.body.scheduleSelect = xss(req.body.courseId)
-=======
+        req.body.scheduleSelect = xss(req.params.courseId)
         if (!req.body.scheduleSelect) throw 'No schedule selected';
         if (typeof(req.body.scheduleSelect) != 'string') throw 'Invalid schedule name';
->>>>>>> 8af28bbfbf91459150765f5f6066bb6443c094ac
         await removeFromSchedule(req.body.scheduleSelect, req.params.courseId, req.session);
         return res.redirect(`/course/view/${req.params.courseId}?schedule=${encodeURIComponent(req.body.scheduleSelect)}`);
     }   
