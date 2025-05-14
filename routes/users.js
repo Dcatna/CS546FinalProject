@@ -535,8 +535,7 @@ router.route("/course/view/:courseId").get(async (req, res) => {
         course.comments = await getAllCommentsByCourseName(course.course); // change course comments (at least for viewing the course page) to that of all the course comments bc it doesnt make much sense to have comments for a section that might not exist anymore
         course.rating = await getOverallCourseRating(course.course);
 
-        res.render('course', {session: req.session, ...course, schedules: schedules, curr_user: req.session.user.userId, id: course._id.toString()});
-
+        res.render('course', {...course, schedules: schedules, comments: courseComment, userId: userId, session: req.session});
         // res.render('course', {...course, schedules: schedules, comments: courseComment, userId: userId});
     }
     catch (e){
