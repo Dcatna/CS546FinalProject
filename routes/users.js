@@ -56,6 +56,18 @@ router.route("/register").get(async (req, res) => {
     
 
     try {
+        if(!userId || typeof userId !== "string" || !/^[A-Za-z0-9]{5,20}$/.test(userId.trim())) { //prolly jsut gonna check objectid too 
+            throw new Error("invalid userId")
+        }
+        if(!firstName || typeof firstName !== "string" || !lastName || typeof lastName !== "string") {
+            throw new Error("invalid first or last name")
+        }
+        if(!emailAddr || typeof emailAddr !== "string" || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailAddr)) {
+            throw new Error("invalid email address")
+        }
+        if(!password || typeof password !== "string" || !/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)) {
+            throw new Error("invalid password")
+        }
         const result = await register(username, firstName, lastName, email, password)
         if (result.registrationCompleted) {
             return res.redirect("/login")
@@ -83,6 +95,12 @@ router.route("/login").get(async (req, res) => {
     //ill just do error checks in the form validation
 
     try {
+        if(!email || typeof email !== "string") {
+            throw new Error("invalid email address")
+        }
+        if (!password || typeof password !== "string") {
+            throw new Error("invalid password")
+        }
         const user = await logIn(email, password)
         req.session.user = {
             firstName: user.firstName,
@@ -322,7 +340,7 @@ router.post("/schedules/upload", upload.single("scheduleCSV"), async (req, res) 
         let schedule;
 
         if (!file) {
-            return res.status(400).send("no file")
+            return res.status(400).render('error', {message: 'No file recieved', session: req.session})
         }
 
         // Parse the CSV file
@@ -394,6 +412,7 @@ router.route("/course/:courseId/comment/create").post(async (req, res) => {
         const commentsCollection = await comments()
         const courseCollection = await courses()
 
+        if (!ObjectId.isValid(req.params.courseId) || !courseCollection.findOne({_id: new ObjectId(req.params.courseId)})) throw new Error('That course does not exist')
         const comment = {
             userId: userId,
             title: req.body.title,
@@ -403,6 +422,7 @@ router.route("/course/:courseId/comment/create").post(async (req, res) => {
             date: new_date(true),
             for: "courses"
         }
+        
         Object.values(comment).forEach((com) => {
             if(!com) {
                 return res.status(400).redirect(req.get("Referer") || "/")
