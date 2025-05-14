@@ -56,13 +56,13 @@ router.route("/register").get(async (req, res) => {
     
 
     try {
-        if(!userId || typeof userId !== "string" || !/^[A-Za-z0-9]{5,20}$/.test(userId.trim())) { //prolly jsut gonna check objectid too 
+        if(!username || typeof username !== "string" || !/^[A-Za-z0-9]{5,20}$/.test(username.trim())) { //prolly jsut gonna check objectid too 
             throw new Error("invalid userId")
         }
         if(!firstName || typeof firstName !== "string" || !lastName || typeof lastName !== "string") {
             throw new Error("invalid first or last name")
         }
-        if(!emailAddr || typeof emailAddr !== "string" || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailAddr)) {
+        if(!email || typeof email !== "string" || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
             throw new Error("invalid email address")
         }
         if(!password || typeof password !== "string" || !/^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password)) {
